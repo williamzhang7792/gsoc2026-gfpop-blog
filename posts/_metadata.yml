@@ -1,0 +1,9 @@
+# Defaults applied to every post under posts/
+author: "williamzhang7792"
+freeze: auto
+
+format:
+  html:
+    code-fold: false
+    code-tools: true
+    code-link: true

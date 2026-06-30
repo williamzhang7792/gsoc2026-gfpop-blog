@@ -1,0 +1,27 @@
+project:
+  type: website
+
+website:
+  title: "gsoc2026-gfpop-blog"
+  description: "GSoC 2026 contribution log & tutorials for the gfpop R package"
+  site-url: "https://github.com/williamzhang7792/gsoc2026-gfpop-blog"
+  navbar:
+    right:
+      - href: index.qmd
+        text: Home
+      - href: about.qmd
+        text: About
+      - icon: github
+        href: https://github.com/williamzhang7792/gsoc2026-gfpop-blog
+
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: darkly
+    css: styles.css
+    toc: true
+
+# Cache executed R chunks; re-run only when a source .qmd changes.
+execute:
+  freeze: auto

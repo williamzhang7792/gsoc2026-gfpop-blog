@@ -1,0 +1,4 @@
+# Netlify serves the pre-rendered Quarto output in _site/ with no build step.
+# Workflow: run `quarto render` locally, commit _site/, then push. Netlify just publishes.
+[build]
+  publish = "_site"

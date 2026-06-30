@@ -1,0 +1,89 @@
+---
+title: "Adding CI to gfpop: the first neutral reader"
+description: "PR A of the midterm series turns on GitHub Actions for gfpop. The boring infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config."
+author: "William Zhang"
+date: "2026-06-29"
+categories: [gsoc, gfpop, contribution, ci, midterm]
+draft: true
+---
+
+The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the dull one: add a continuous-integration workflow so that everything after it gets checked on every push, and move on. Plumbing. No new behavior, no API.
+
+It did not stay dull, and the reason is worth a post.
+
+## What CI actually is
+
+Turning CI on is the first time the package runs somewhere that is not my laptop. A fresh Ubuntu, macOS, and Windows runner, R release, nothing installed that I forgot I had installed two years ago. CI is the first neutral reader of your code. It has none of your context, and so it tells you, plainly, what your own machine has been quietly hiding.
+
+What it told me here was that gfpop could not go green by configuration alone. The package source had to change.
+
+## The workflow
+
+The file is the standard `r-lib` `R-CMD-check`, dropped at `.github/workflows/R-CMD-check.yaml`. A three-OS matrix on R release, and triggers that fire on a push to any branch and on pull requests into `main` or `master`:
+
+```yaml
+on:
+  push:
+  pull_request:
+    branches: [main, master]
+```
+
+The one part that matters for the rest of this story is dependency setup. CI preinstalls what the check needs before it runs:
+
+```yaml
+- uses: r-lib/actions/setup-r-dependencies@v2
+  with:
+    extra-packages: |
+      any::rcmdcheck
+      any::remotes
+      github::vrunge/gfpop.data
+    needs: check
+```
+
+Note the last line. `gfpop.data` is GitHub-only, not on CRAN, so CI installs it from GitHub with the `github::` prefix. That detail is the whole knot, so hold onto it.
+
+One choice worth a sentence: the push trigger is a bare `push:`, which runs on every branch, not just `main` and `master`. That is convenient for getting a green check before a pull request exists. It also spends the maintainer's Actions minutes on every branch push once this is upstream, so the PR offers to restrict it if Vincent would rather.
+
+## What the neutral reader caught
+
+The first run failed, and not where I expected. Two places in the package were installing a dependency over the network at the wrong moment.
+
+The test suite did it. `tests/testthat/test-sn.R` opened with `library(devtools)` and a call to `devtools::install_github("vrunge/gfpop.data")`, at test time. One vignette, `vignettes/applications.Rmd`, did the same thing at vignette-build time. On my machine both were invisible: I already had `gfpop.data`, the install was a no-op, the tests passed. In the clean CI sandbox they failed with:
+
+```
+The package "remotes" is required.
+```
+
+`devtools::install_github` delegates to `remotes`, and the isolated subprocess that `R CMD check` spins up to run the tests could not see it.
+
+That last clause is the real lesson, and it is why no amount of workflow tweaking fixes this. I could add `remotes` to `extra-packages` (it is there). It would not matter. The check runs the tests in its own subprocess, and that subprocess does not inherit the packages the workflow installed into the outer session. A network install inside `R CMD check` is simply in the wrong place. The fix is not in the YAML. The fix is in the package.
+
+## The fix
+
+So the infrastructure-only PR grew a second half: make the suite CI-friendly.
+
+In `test-sn.R`, the runtime install came out and a dependency check went in. The file asks whether its dependencies are present, then each test skips cleanly if they are not:
+
+```r
+have.sn.deps <- requireNamespace("gfpop.data", quietly = TRUE) &&
+  requireNamespace("data.table", quietly = TRUE)
+```
+
+```r
+test_that("abs model with 1 segment returned", {
+  skip_if_not(have.sn.deps, "gfpop.data/data.table not installed")
+  ...
+})
+```
+
+Because `gfpop.data` is preinstalled in CI through `extra-packages`, `have.sn.deps` is true on the runners and the `sn` tests run for real. On a contributor's machine without the data package, they skip with a clear message instead of trying to reach the network mid-check. The tests are honest about what they need, and they ask the environment instead of reshaping it.
+
+`applications.Rmd` got the same treatment: the build-time install removed, the vignette now leaning on the preinstalled `gfpop.data`, with a comment showing how to install it by hand. Two small housekeeping items rounded it out, a `^\.github$` line in `.Rbuildignore` so the workflow does not get bundled into the package tarball, and an `R-CMD-check` badge on the README.
+
+The result is the thing CI exists to produce. `R CMD check` reports `Status: OK`, zero errors, zero warnings, zero notes, on all three operating systems, and the vignettes rebuild without touching the network.
+
+A certification badge, however reassuring, is not a guarantee the package is correct. A green check, however satisfying, is not proof the next change is safe. What the green check is, is a neutral reader who will say so the moment something breaks, on three machines that are not mine, before anyone else has to find out. For a project about to take on five PRs of new behavior, that reader is the foundation the rest of the work stands on. That is the point of starting with the boring one.
+
+## Related PRs
+
+- [PR #20](https://github.com/vrunge/gfpop/pull/20)

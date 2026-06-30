@@ -1,0 +1,6 @@
+/* Site-wide style overrides. Intentionally minimal for now. */
+
+/* Give the "Related PRs" callout a little breathing room. */
+.related-prs {
+  margin-top: 2rem;
+}

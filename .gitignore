@@ -1,0 +1,21 @@
+# Quarto
+/.quarto/
+
+# Quarto freeze cache is committed on purpose (keeps re-renders fast & reproducible);
+# do NOT ignore /_freeze/.
+
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+
+# macOS
+.DS_Store
+
+**/*.quarto_ipynb
+
+# local tooling / scratch — keep out of the public repo
+.claude/
+CLAUDE.md
+tempo/

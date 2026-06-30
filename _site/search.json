@@ -1,0 +1,100 @@
+[
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "This site is the public write-up of my Google Summer of Code (GSoC) 2026 work on gfpop. It does two things:\nClick Home in the top navigation to read the posts."
+  },
+  {
+    "objectID": "about.html#what-is-gfpop",
+    "href": "about.html#what-is-gfpop",
+    "title": "About",
+    "section": "What is gfpop?",
+    "text": "What is gfpop?\ngfpop = Graph-constrained Functional Pruning Optimal Partitioning — an R package with a C++ core for multiple change-point detection under graph constraints, by Vincent Runge (LaMME, Université d’Évry).\nYou detect change-points in a 1-D signal, but constrain how the segment means may change by defining a graph of states and edges. That single dynamic-programming engine then expresses isotonic regression, up/down patterns, exponential decay, robust fits, a fixed number of segments, and more.\n\nUpstream repo: https://github.com/vrunge/gfpop\nMethod paper: https://arxiv.org/abs/2002.03646\nInstall: devtools::install_github(\"vrunge/gfpop\")"
+  },
+  {
+    "objectID": "about.html#about-me",
+    "href": "about.html#about-me",
+    "title": "About",
+    "section": "About me",
+    "text": "About me\nMaintained by williamzhang7792. I contribute to the upstream gfpop package via the usual fork-and-PR flow; this repo is the standalone public record of that work.\n\n\n\nMy first GSoC meeting, May 2026: an early video call with my mentors, at the start of the time-dependent constraints project."
+  },
+  {
+    "objectID": "posts/midterm-in-five-prs/index.html",
+    "href": "posts/midterm-in-five-prs/index.html",
+    "title": "How to hand a maintainer a whole feature: the midterm in five PRs",
+    "section": "",
+    "text": "The midterm deliverable for my GSoC project is the core feature: it makes the constraint graph vary along the signal, so which edges are allowed depends on where you are in the data. The question here is narrower and more practical: once you have built something that size, how do you hand it to a maintainer?\nNot as one diff. A single pull request that adds an R argument, threads it through the C++ solver, changes the dynamic-programming loops, and lands a new validated model is a request the reviewer cannot actually review. They can skim it, trust it, and merge it, or they can refuse it. Neither is what you want. What you want is for the maintainer to read each piece, agree with it on its own terms, and merge it while the rest is still on your fork.\nSo the work is five pull requests, A through E. Each one is small enough to read in a sitting, backward compatible by construction, and mergeable on its own. The trunk stays green from the first to the last. The opener is deliberately boring. The payoff at the end is an oracle test."
+  },
+  {
+    "objectID": "posts/midterm-in-five-prs/index.html#the-five-prs",
+    "href": "posts/midterm-in-five-prs/index.html#the-five-prs",
+    "title": "How to hand a maintainer a whole feature: the midterm in five PRs",
+    "section": "The five PRs",
+    "text": "The five PRs\nPR A, CI. A GitHub Actions R-CMD-check workflow across Ubuntu, macOS, and Windows. This is the dull one on purpose, the foundation everything else stands on: a neutral reader that checks the package on three machines that are not mine, on every push. It earned its own write-up, coming next in this series, because turning it on surfaced a network install hiding inside the test suite and the fix was in the package, not the YAML. Fully independent of the rest. Open upstream as #20.\nPR B, the R rule API. This adds a backward-compatible rule column to Edge(), and carries it through graph(), StartEnd(), and Node(). The default is NA, which means an edge is active in every rule, so a graph written today behaves exactly as it did before. Pure R, and no behavior change yet: the column is recorded and ignored. It is its own PR because the API shape is the part most worth arguing about before any code depends on it, so it goes up as a draft, #21, to invite that argument early.\nPR C, the inert C++ plumbing. This adds the ruleID field to the C++ edge representation, a getter, a Graph::isActive() helper, and a defensive read of the new rule column out of the R graph. Nothing consumes any of it yet, so every result is bit-for-bit what it was before. It is backward compatible by construction, and an inert-equality test proves it. Splitting the plumbing from the activation means the reviewer can confirm the new machinery is genuinely dormant before they look at the switch that turns it on. Independent of B in principle, stacked on it in practice, for a reason I will get to.\nPR D, activation. This is the behavioral switch. It threads a per-data-point rule vector through gfpop() and into the solver, and skips inactive edges inside the dynamic-programming loops. Before D, the rule column is a passenger; after D, it steers. It depends on B for the API and C for the C++ scaffolding. This is also where the work was expected to be hard, and the honest note below is about why it was not.\nPR E, the LOPART oracle. The midterm payoff. It builds the four-rule, two-state graph that expresses LOPART, constructs the rule vector from a set of labels, and then asserts that gfpop with the rule argument reproduces LOPART::LOPART() exactly: the same change-points, the same segment means, the same loss. It depends on D, because it is the first thing that runs the whole chain end to end and checks the answer against an independent implementation."
+  },
+  {
+    "objectID": "posts/midterm-in-five-prs/index.html#how-they-depend-on-each-other",
+    "href": "posts/midterm-in-five-prs/index.html#how-they-depend-on-each-other",
+    "title": "How to hand a maintainer a whole feature: the midterm in five PRs",
+    "section": "How they depend on each other",
+    "text": "How they depend on each other\nA, B, and C are independent. Each one can be built straight off master without the other two. D needs B and C. E needs D.\n\n\n\nThe midterm as five pull requests: PR A stands alone, while PRs B and C converge on D, which leads to E.\n\n\nThe true shape is a diamond, but in practice I built it as a straight line, A then B then C then D then E. The reason is small and concrete. C’s inert-equality test is cleaner when it can use B’s new Edge(rule = ...) API to construct its test graph, rather than reaching around it. Stacking C on B costs nothing, since D needs both anyway, and a linear stack is far simpler to keep green than a diamond you have to merge back together. When the difference between the honest dependency graph and the build order is one convenience edge, take the simpler build order."
+  },
+  {
+    "objectID": "posts/midterm-in-five-prs/index.html#whats-hard",
+    "href": "posts/midterm-in-five-prs/index.html#whats-hard",
+    "title": "How to hand a maintainer a whole feature: the midterm in five PRs",
+    "section": "What’s hard",
+    "text": "What’s hard\nPR D was supposed to be the hard one. The proposal called out infinity handling in the constraint operators as the risk: when an edge is switched off, the cost of taking it has to become infinite in a way the operators downstream handle without breaking, and I expected to be editing the min-cost operators one by one to make that true.\nI did not have to touch them. The solver already initializes unreachable states to positive infinity, and the whole functional-pruning machinery is already built to propagate that correctly. Skipping an inactive edge is, as far as the operators are concerned, the same as never having had a path to it, which is a case they have always handled. The part I had budgeted the most worry for turned out to be free. That happens sometimes, and it is worth saying plainly rather than dressing it up as foresight."
+  },
+  {
+    "objectID": "posts/midterm-in-five-prs/index.html#why-a-through-e-is-the-midterm",
+    "href": "posts/midterm-in-five-prs/index.html#why-a-through-e-is-the-midterm",
+    "title": "How to hand a maintainer a whole feature: the midterm in five PRs",
+    "section": "Why A through E is the midterm",
+    "text": "Why A through E is the midterm\nThe slicing is not arbitrary. A through E is exactly the set of “core goals, must deliver” from my proposal, which is what makes it a natural milestone rather than a place I stopped because the clock ran out.\nThe mapping is one to one:\n\nEdge(..., rule = ...), backward compatible: PR B.\ngfpop(..., rule = ...), backward compatible: PR D.\nC++ edge filtering by rule: PR D.\nInfinity handling in the constraint operators: PR D, satisfied by reusing the existing machinery (the surprise above).\nA LOPART model, oracle-validated against LOPART::LOPART(): PR E.\nRegression tests, gfpop with no rule identical to current behavior: PR B, C, and D each carry their own.\nR CMD check passes with no new warnings: PR A, and held by all of them.\n\nEvery must-deliver box is checked. The stretch goals are deliberately Part 2: the up-down-with-labels model on synthetic genomic data, the performance benchmarks from a thousand points up to a million, and the capstone vignette with a filmstrip view of the graph changing along the signal. Those are real and they are next; they are just not what the midterm is for."
+  },
+  {
+    "objectID": "posts/midterm-in-five-prs/index.html#where-it-stands",
+    "href": "posts/midterm-in-five-prs/index.html#where-it-stands",
+    "title": "How to hand a maintainer a whole feature: the midterm in five PRs",
+    "section": "Where it stands",
+    "text": "Where it stands\nA and B are open upstream: #20 is the CI workflow, and #21 is the rule API, sitting as a draft so the shape can be discussed before C, D, and E lean on it. C, D, and E are staged on my fork and will become their own PRs once the API in B has settled, since opening them now would only ask the maintainer to review against a moving target.\nThe whole stack is assembled and green on a prototype branch, the LOPART oracle included. That branch is the proof that the diamond closes. The PRs are how I hand it over one honest piece at a time."
+  },
+  {
+    "objectID": "posts/midterm-in-five-prs/index.html#related-prs",
+    "href": "posts/midterm-in-five-prs/index.html#related-prs",
+    "title": "How to hand a maintainer a whole feature: the midterm in five PRs",
+    "section": "Related PRs",
+    "text": "Related PRs\nThis post is the hub for the series; each PR gets its own write-up as it goes upstream.\n\nPR A, CI: PR #20. Write-up: coming next.\nPR B, the R rule API: PR #21, open as a draft.\nPR C, inert C++ plumbing: staged on the prototype branch, PR to follow once B settles.\nPR D, activation: staged on the prototype branch, PR to follow.\nPR E, the LOPART oracle: staged on the prototype branch, PR to follow."
+  },
+  {
+    "objectID": "posts/week-1-setup/index.html",
+    "href": "posts/week-1-setup/index.html",
+    "title": "Starting GSoC 2026: the project and how this blog works",
+    "section": "",
+    "text": "This blog tracks my Google Summer of Code 2026 work on gfpop, an R package with a C++ core that detects change-points in a signal under graph constraints. The idea is to describe the allowed shape of a segmentation as a graph of states and edges, and let one dynamic-programming engine fit isotonic, up-down, and other patterns through that single interface. One engine, many shapes.\n\n\n\nChange-point detection on a one-dimensional signal: noisy data, a piecewise-constant fit, and the change-points gfpop recovers.\n\n\nMy project is Time-Dependent Constraints in gfpop. Today that graph is fixed in time: the same edges apply at every data point. That rules out any model whose allowed transitions change along the signal. LOPART is the example I keep coming back to, where what is permitted depends on whether a point falls inside a labeled region. The project adds a rule function that picks which edges are active at each time step, so the constraint graph can vary across the data instead of standing still.\nThe concrete work is a rule= argument on Edge() and gfpop(), the C++ edge filtering that backs it, and two validation models: LOPART, checked against the standalone LOPART package, and an up-down-with-labels model on synthetic genomic data. Two constraints sit underneath all of it. The argument stays backward compatible, and regression tests prove gfpop without rule returns exactly what it does today, down to the value. A capstone vignette ties it together.\nThe full write-up and timeline are in the proposal: Time-Dependent Constraints in gfpop."
+  },
+  {
+    "objectID": "posts/week-1-setup/index.html#the-project",
+    "href": "posts/week-1-setup/index.html#the-project",
+    "title": "Starting GSoC 2026: the project and how this blog works",
+    "section": "",
+    "text": "This blog tracks my Google Summer of Code 2026 work on gfpop, an R package with a C++ core that detects change-points in a signal under graph constraints. The idea is to describe the allowed shape of a segmentation as a graph of states and edges, and let one dynamic-programming engine fit isotonic, up-down, and other patterns through that single interface. One engine, many shapes.\n\n\n\nChange-point detection on a one-dimensional signal: noisy data, a piecewise-constant fit, and the change-points gfpop recovers.\n\n\nMy project is Time-Dependent Constraints in gfpop. Today that graph is fixed in time: the same edges apply at every data point. That rules out any model whose allowed transitions change along the signal. LOPART is the example I keep coming back to, where what is permitted depends on whether a point falls inside a labeled region. The project adds a rule function that picks which edges are active at each time step, so the constraint graph can vary across the data instead of standing still.\nThe concrete work is a rule= argument on Edge() and gfpop(), the C++ edge filtering that backs it, and two validation models: LOPART, checked against the standalone LOPART package, and an up-down-with-labels model on synthetic genomic data. Two constraints sit underneath all of it. The argument stays backward compatible, and regression tests prove gfpop without rule returns exactly what it does today, down to the value. A capstone vignette ties it together.\nThe full write-up and timeline are in the proposal: Time-Dependent Constraints in gfpop."
+  },
+  {
+    "objectID": "posts/week-1-setup/index.html#how-this-blog-is-structured",
+    "href": "posts/week-1-setup/index.html#how-this-blog-is-structured",
+    "title": "Starting GSoC 2026: the project and how this blog works",
+    "section": "How this blog is structured",
+    "text": "How this blog is structured\nThe blog has two jobs.\nThe first is a contribution log. Each time I change something in gfpop upstream, a post here explains what changed and why, and links the pull request it came from. Those posts close with a short Related PRs section listing the upstream PR as a plain link like [PR #123](https://github.com/vrunge/gfpop/pull/123), so the code and the write-up always point back at each other.\nThe second is tutorials: posts that show how to use gfpop, with runnable R. The site is built with Quarto, which runs the code in a post at render time. So the output and plots you see are produced by gfpop, not pasted in by hand.\nEach post lives in its own folder under posts/. There are no upstream PRs yet, so this first post has no Related PRs section.\nEvery contribution post after it will."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "gsoc2026-gfpop-blog",
+    "section": "",
+    "text": "Posts documenting my Google Summer of Code 2026 work on gfpop. It is graph-constrained change-point detection in R. Each contribution post links the upstream pull request it describes.\n\n\n\n\n\n\n\n\n\nStarting GSoC 2026: the project and how this blog works\n\n\n\ngsoc\n\ngfpop\n\nintro\n\n\n\nAn introduction to my GSoC 2026 project on time-dependent constraints in gfpop, and how this blog is organized.\n\n\n\n\n\nJun 29, 2026\n\n2 min\n\n\n\n\n\n\nHow to hand a maintainer a whole feature: the midterm in five PRs\n\n\n\ngsoc\n\ngfpop\n\nmidterm\n\n\n\nThe GSoC midterm deliverable is the core of time-dependent constraints in gfpop. This is the hub post for how it was sliced into five small, independent, backward-compatible pull requests, A through E, with the trunk green the whole way.\n\n\n\n\n\nJun 29, 2026\n\n7 min\n\n\n\n\nNo matching items"
+  }
+]
