@@ -8,7 +8,7 @@
 
 <meta name="author" content="William Zhang">
 <meta name="dcterms.date" content="2026-06-30">
-<meta name="description" content="PR A of the midterm series turns on GitHub Actions for gfpop. The boring infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config.">
+<meta name="description" content="PR A of the midterm series turns on GitHub Actions for gfpop. This infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config.">
 
 <title>Adding CI to gfpop: the first neutral reader – gsoc2026-gfpop-blog</title>
 <style>
@@ -352,7 +352,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div>
   <div class="description">
-    PR A of the midterm series turns on GitHub Actions for gfpop. The boring infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config.
+    PR A of the midterm series turns on GitHub Actions for gfpop. This infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config.
   </div>
 </div>
 
@@ -381,8 +381,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the dull one: add a continuous-integration workflow so that everything after it gets checked on every push, and move on. Plumbing. No new behavior, no API.</p>
-<p>It did not stay dull, and the reason is worth a post.</p>
+<p>The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the “dull” one: add a continuous-integration workflow so that everything after it gets checked on every push, and move on.</p>
+<p>But still, I faced one challenge that I had to fix.</p>
 <section id="what-ci-actually-is" class="level2">
 <h2 class="anchored" data-anchor-id="what-ci-actually-is">What CI actually is</h2>
 <p>Turning CI on is the first time the package runs somewhere that is not my laptop. A fresh Ubuntu, macOS, and Windows runner, R release, nothing installed that I forgot I had installed two years ago. CI is the first neutral reader of your code. It has none of your context, and so it tells you, plainly, what your own machine has been quietly hiding.</p>
@@ -427,7 +427,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Because <code>gfpop.data</code> is preinstalled in CI through <code>extra-packages</code>, <code>have.sn.deps</code> is true on the runners and the <code>sn</code> tests run for real. On a contributor’s machine without the data package, they skip with a clear message instead of trying to reach the network mid-check. The tests are honest about what they need, and they ask the environment instead of reshaping it.</p>
 <p><code>applications.Rmd</code> got the same treatment: the build-time install removed, the vignette now leaning on the preinstalled <code>gfpop.data</code>, with a comment showing how to install it by hand. Two small housekeeping items rounded it out, a <code>^\.github$</code> line in <code>.Rbuildignore</code> so the workflow does not get bundled into the package tarball, and an <code>R-CMD-check</code> badge on the README.</p>
 <p>The result is the thing CI exists to produce. <code>R CMD check</code> reports <code>Status: OK</code>, zero errors, zero warnings, zero notes, on all three operating systems, and the vignettes rebuild without touching the network.</p>
-<p>A green check gives me a neutral reader that runs on three machines that are not mine and flags a break the moment it happens, before anyone else has to find out. It does not make the code correct, but it is the floor a project about to add five PRs of new behavior stands on. It is why I started with the boring one.</p>
+<p>A green check gives me a neutral reader that runs on three machines that are not mine and flags a break the moment it happens, before anyone else has to find out. It does not make the code correct, but it is the floor a project about to add five PRs of new behavior stands on. It is why I started with CI.</p>
 </section>
 <section id="related-prs" class="level2">
 <h2 class="anchored" data-anchor-id="related-prs">Related PRs</h2>
@@ -907,15 +907,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Adding CI to gfpop: the first neutral reader"</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "PR A of the midterm series turns on GitHub Actions for gfpop. The boring infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config."</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "PR A of the midterm series turns on GitHub Actions for gfpop. This infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config."</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> "William Zhang"</span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "2026-06-30"</span></span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="an">categories:</span><span class="co"> [gsoc, gfpop, contribution, ci, midterm]</span></span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the dull one: add a continuous-integration workflow so that everything after it gets checked on every push, and move on. Plumbing. No new behavior, no API.</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the "dull" one: add a continuous-integration workflow so that everything after it gets checked on every push, and move on.</span>
 <span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>It did not stay dull, and the reason is worth a post.</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>But still, I faced one challenge that I had to fix.</span>
 <span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="fu">## What CI actually is</span></span>
 <span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
@@ -988,7 +988,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>The result is the thing CI exists to produce. <span class="in">`R CMD check`</span> reports <span class="in">`Status: OK`</span>, zero errors, zero warnings, zero notes, on all three operating systems, and the vignettes rebuild without touching the network.</span>
 <span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>A green check gives me a neutral reader that runs on three machines that are not mine and flags a break the moment it happens, before anyone else has to find out. It does not make the code correct, but it is the floor a project about to add five PRs of new behavior stands on. It is why I started with the boring one.</span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>A green check gives me a neutral reader that runs on three machines that are not mine and flags a break the moment it happens, before anyone else has to find out. It does not make the code correct, but it is the floor a project about to add five PRs of new behavior stands on. It is why I started with CI.</span>
 <span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a><span class="fu">## Related PRs</span></span>
 <span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a></span>

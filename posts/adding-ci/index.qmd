@@ -1,14 +1,14 @@
 ---
 title: "Adding CI to gfpop: the first neutral reader"
-description: "PR A of the midterm series turns on GitHub Actions for gfpop. The boring infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config."
+description: "PR A of the midterm series turns on GitHub Actions for gfpop. This infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config."
 author: "William Zhang"
 date: "2026-06-30"
 categories: [gsoc, gfpop, contribution, ci, midterm]
 ---
 
-The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the dull one: add a continuous-integration workflow so that everything after it gets checked on every push, and move on. Plumbing. No new behavior, no API.
+The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the "dull" one: add a continuous-integration workflow so that everything after it gets checked on every push, and move on.
 
-It did not stay dull, and the reason is worth a post.
+But still, I faced one challenge that I had to fix.
 
 ## What CI actually is
 
@@ -81,7 +81,7 @@ Because `gfpop.data` is preinstalled in CI through `extra-packages`, `have.sn.de
 
 The result is the thing CI exists to produce. `R CMD check` reports `Status: OK`, zero errors, zero warnings, zero notes, on all three operating systems, and the vignettes rebuild without touching the network.
 
-A green check gives me a neutral reader that runs on three machines that are not mine and flags a break the moment it happens, before anyone else has to find out. It does not make the code correct, but it is the floor a project about to add five PRs of new behavior stands on. It is why I started with the boring one.
+A green check gives me a neutral reader that runs on three machines that are not mine and flags a break the moment it happens, before anyone else has to find out. It does not make the code correct, but it is the floor a project about to add five PRs of new behavior stands on. It is why I started with CI.
 
 ## Related PRs
 
