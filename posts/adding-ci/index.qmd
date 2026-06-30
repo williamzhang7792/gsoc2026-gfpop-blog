@@ -4,7 +4,6 @@ description: "PR A of the midterm series turns on GitHub Actions for gfpop. The 
 author: "William Zhang"
 date: "2026-06-29"
 categories: [gsoc, gfpop, contribution, ci, midterm]
-draft: true
 ---
 
 The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the dull one: add a continuous-integration workflow so that everything after it gets checked on every push, and move on. Plumbing. No new behavior, no API.
@@ -56,7 +55,7 @@ The package "remotes" is required.
 
 `devtools::install_github` delegates to `remotes`, and the isolated subprocess that `R CMD check` spins up to run the tests could not see it.
 
-That last clause is the real lesson, and it is why no amount of workflow tweaking fixes this. I could add `remotes` to `extra-packages` (it is there). It would not matter. The check runs the tests in its own subprocess, and that subprocess does not inherit the packages the workflow installed into the outer session. A network install inside `R CMD check` is simply in the wrong place. The fix is not in the YAML. The fix is in the package.
+That last point is the real lesson. Adding `remotes` to `extra-packages` does not fix it (it is already there): a network install inside `R CMD check` is in the wrong place to begin with. The check runs in its own sandbox, and a build that reaches out to GitHub mid-check is fragile no matter what the workflow preinstalls. So the fix belongs in the package, not the workflow.
 
 ## The fix
 
@@ -82,7 +81,7 @@ Because `gfpop.data` is preinstalled in CI through `extra-packages`, `have.sn.de
 
 The result is the thing CI exists to produce. `R CMD check` reports `Status: OK`, zero errors, zero warnings, zero notes, on all three operating systems, and the vignettes rebuild without touching the network.
 
-A certification badge, however reassuring, is not a guarantee the package is correct. A green check, however satisfying, is not proof the next change is safe. What the green check is, is a neutral reader who will say so the moment something breaks, on three machines that are not mine, before anyone else has to find out. For a project about to take on five PRs of new behavior, that reader is the foundation the rest of the work stands on. That is the point of starting with the boring one.
+A green check gives me a neutral reader that runs on three machines that are not mine and flags a break the moment it happens, before anyone else has to find out. It does not make the code correct, but it is the floor a project about to add five PRs of new behavior stands on. It is why I started with the boring one.
 
 ## Related PRs
 

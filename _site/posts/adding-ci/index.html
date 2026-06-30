@@ -8,9 +8,9 @@
 
 <meta name="author" content="William Zhang">
 <meta name="dcterms.date" content="2026-06-29">
-<meta name="description" content="The GSoC midterm deliverable is the core of time-dependent constraints in gfpop. This is the hub post for how it was sliced into five small, independent, backward-compatible pull requests, A through E, with the trunk green the whole way.">
+<meta name="description" content="PR A of the midterm series turns on GitHub Actions for gfpop. The boring infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config.">
 
-<title>How to hand a maintainer a whole feature: the midterm in five PRs – gsoc2026-gfpop-blog</title>
+<title>Adding CI to gfpop: the first neutral reader – gsoc2026-gfpop-blog</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -326,11 +326,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#the-five-prs" id="toc-the-five-prs" class="nav-link active" data-scroll-target="#the-five-prs">The five PRs</a></li>
-  <li><a href="#how-they-depend-on-each-other" id="toc-how-they-depend-on-each-other" class="nav-link" data-scroll-target="#how-they-depend-on-each-other">How they depend on each other</a></li>
-  <li><a href="#whats-hard" id="toc-whats-hard" class="nav-link" data-scroll-target="#whats-hard">What’s hard</a></li>
-  <li><a href="#why-a-through-e-is-the-midterm" id="toc-why-a-through-e-is-the-midterm" class="nav-link" data-scroll-target="#why-a-through-e-is-the-midterm">Why A through E is the midterm</a></li>
-  <li><a href="#where-it-stands" id="toc-where-it-stands" class="nav-link" data-scroll-target="#where-it-stands">Where it stands</a></li>
+  <li><a href="#what-ci-actually-is" id="toc-what-ci-actually-is" class="nav-link active" data-scroll-target="#what-ci-actually-is">What CI actually is</a></li>
+  <li><a href="#the-workflow" id="toc-the-workflow" class="nav-link" data-scroll-target="#the-workflow">The workflow</a></li>
+  <li><a href="#what-the-neutral-reader-caught" id="toc-what-the-neutral-reader-caught" class="nav-link" data-scroll-target="#what-the-neutral-reader-caught">What the neutral reader caught</a></li>
+  <li><a href="#the-fix" id="toc-the-fix" class="nav-link" data-scroll-target="#the-fix">The fix</a></li>
   <li><a href="#related-prs" id="toc-related-prs" class="nav-link" data-scroll-target="#related-prs">Related PRs</a></li>
   </ul>
 </nav>
@@ -341,17 +340,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">How to hand a maintainer a whole feature: the midterm in five PRs</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title">Adding CI to gfpop: the first neutral reader</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
   <div class="quarto-categories">
     <div class="quarto-category">gsoc</div>
     <div class="quarto-category">gfpop</div>
+    <div class="quarto-category">contribution</div>
+    <div class="quarto-category">ci</div>
     <div class="quarto-category">midterm</div>
   </div>
   </div>
 
 <div>
   <div class="description">
-    The GSoC midterm deliverable is the core of time-dependent constraints in gfpop. This is the hub post for how it was sliced into five small, independent, backward-compatible pull requests, A through E, with the trunk green the whole way.
+    PR A of the midterm series turns on GitHub Actions for gfpop. The boring infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config.
   </div>
 </div>
 
@@ -380,62 +381,58 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>The midterm deliverable for my GSoC project is the core feature: it makes the constraint graph vary along the signal, so which edges are allowed depends on where you are in the data. The question here is narrower and more practical: once you have built something that size, how do you hand it to a maintainer?</p>
-<p>Not as one diff. A single pull request that adds an R argument, threads it through the C++ solver, changes the dynamic-programming loops, and lands a new validated model is a request the reviewer cannot actually review. They can skim it, trust it, and merge it, or they can refuse it. Neither is what you want. What you want is for the maintainer to read each piece, agree with it on its own terms, and merge it while the rest is still on your fork.</p>
-<p>So the work is five pull requests, A through E. Each one is small enough to read in a sitting, backward compatible by construction, and mergeable on its own. The trunk stays green from the first to the last. The opener is deliberately boring. The payoff at the end is an oracle test.</p>
-<section id="the-five-prs" class="level2">
-<h2 class="anchored" data-anchor-id="the-five-prs">The five PRs</h2>
-<p><strong>PR A, CI.</strong> A GitHub Actions <code>R-CMD-check</code> workflow across Ubuntu, macOS, and Windows. This is the dull one on purpose, the foundation everything else stands on: a neutral reader that checks the package on three machines that are not mine, on every push. It earned its own write-up, <a href="../adding-ci/">the first neutral reader</a>, because turning it on surfaced a network install hiding inside the test suite and the fix was in the package, not the YAML. Fully independent of the rest. Open upstream as <a href="https://github.com/vrunge/gfpop/pull/20">#20</a>.</p>
-<p><strong>PR B, the R rule API.</strong> This adds a backward-compatible <code>rule</code> column to <code>Edge()</code>, and carries it through <code>graph()</code>, <code>StartEnd()</code>, and <code>Node()</code>. The default is <code>NA</code>, which means an edge is active in every rule, so a graph written today behaves exactly as it did before. Pure R, and no behavior change yet: the column is recorded and ignored. It is its own PR because the API shape is the part most worth arguing about before any code depends on it, so it goes up as a draft, <a href="https://github.com/vrunge/gfpop/pull/21">#21</a>, to invite that argument early.</p>
-<p><strong>PR C, the inert C++ plumbing.</strong> This adds the <code>ruleID</code> field to the C++ edge representation, a getter, a <code>Graph::isActive()</code> helper, and a defensive read of the new rule column out of the R graph. Nothing consumes any of it yet, so every result is bit-for-bit what it was before. It is backward compatible by construction, and an inert-equality test proves it. Splitting the plumbing from the activation means the reviewer can confirm the new machinery is genuinely dormant before they look at the switch that turns it on. Independent of B in principle, stacked on it in practice, for a reason I will get to.</p>
-<p><strong>PR D, activation.</strong> This is the behavioral switch. It threads a per-data-point rule vector through <code>gfpop()</code> and into the solver, and skips inactive edges inside the dynamic-programming loops. Before D, the rule column is a passenger; after D, it steers. It depends on B for the API and C for the C++ scaffolding. This is also where the work was expected to be hard, and the honest note below is about why it was not.</p>
-<p><strong>PR E, the LOPART oracle.</strong> The midterm payoff. It builds the four-rule, two-state graph that expresses LOPART, constructs the rule vector from a set of labels, and then asserts that gfpop with the <code>rule</code> argument reproduces <code>LOPART::LOPART()</code> exactly: the same change-points, the same segment means, the same loss. It depends on D, because it is the first thing that runs the whole chain end to end and checks the answer against an independent implementation.</p>
+<p>The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the dull one: add a continuous-integration workflow so that everything after it gets checked on every push, and move on. Plumbing. No new behavior, no API.</p>
+<p>It did not stay dull, and the reason is worth a post.</p>
+<section id="what-ci-actually-is" class="level2">
+<h2 class="anchored" data-anchor-id="what-ci-actually-is">What CI actually is</h2>
+<p>Turning CI on is the first time the package runs somewhere that is not my laptop. A fresh Ubuntu, macOS, and Windows runner, R release, nothing installed that I forgot I had installed two years ago. CI is the first neutral reader of your code. It has none of your context, and so it tells you, plainly, what your own machine has been quietly hiding.</p>
+<p>What it told me here was that gfpop could not go green by configuration alone. The package source had to change.</p>
 </section>
-<section id="how-they-depend-on-each-other" class="level2">
-<h2 class="anchored" data-anchor-id="how-they-depend-on-each-other">How they depend on each other</h2>
-<p>A, B, and C are independent. Each one can be built straight off <code>master</code> without the other two. D needs B and C. E needs D.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="five-prs-diamond.svg" class="img-fluid figure-img"></p>
-<figcaption>The midterm as five pull requests: PR A stands alone, while PRs B and C converge on D, which leads to E.</figcaption>
-</figure>
-</div>
-<p>The true shape is a diamond, but in practice I built it as a straight line, A then B then C then D then E. The reason is small and concrete. C’s inert-equality test is cleaner when it can use B’s new <code>Edge(rule = ...)</code> API to construct its test graph, rather than reaching around it. Stacking C on B costs nothing, since D needs both anyway, and a linear stack is far simpler to keep green than a diamond you have to merge back together. When the difference between the honest dependency graph and the build order is one convenience edge, take the simpler build order.</p>
+<section id="the-workflow" class="level2">
+<h2 class="anchored" data-anchor-id="the-workflow">The workflow</h2>
+<p>The file is the standard <code>r-lib</code> <code>R-CMD-check</code>, dropped at <code>.github/workflows/R-CMD-check.yaml</code>. A three-OS matrix on R release, and triggers that fire on a push to any branch and on pull requests into <code>main</code> or <code>master</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> master</span><span class="kw">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The one part that matters for the rest of this story is dependency setup. CI preinstalls what the check needs before it runs:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-r-dependencies@v2</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">    extra-packages</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>      any::rcmdcheck</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      any::remotes</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      github::vrunge/gfpop.data</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> check</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Note the last line. <code>gfpop.data</code> is GitHub-only, not on CRAN, so CI installs it from GitHub with the <code>github::</code> prefix. That detail is the whole knot, so hold onto it.</p>
+<p>One choice worth a sentence: the push trigger is a bare <code>push:</code>, which runs on every branch, not just <code>main</code> and <code>master</code>. That is convenient for getting a green check before a pull request exists. It also spends the maintainer’s Actions minutes on every branch push once this is upstream, so the PR offers to restrict it if Vincent would rather.</p>
 </section>
-<section id="whats-hard" class="level2">
-<h2 class="anchored" data-anchor-id="whats-hard">What’s hard</h2>
-<p>PR D was supposed to be the hard one. The proposal called out infinity handling in the constraint operators as the risk: when an edge is switched off, the cost of taking it has to become infinite in a way the operators downstream handle without breaking, and I expected to be editing the <code>min</code>-cost operators one by one to make that true.</p>
-<p>I did not have to touch them. The solver already initializes unreachable states to positive infinity, and the whole functional-pruning machinery is already built to propagate that correctly. Skipping an inactive edge is, as far as the operators are concerned, the same as never having had a path to it, which is a case they have always handled. The part I had budgeted the most worry for turned out to be free. That happens sometimes, and it is worth saying plainly rather than dressing it up as foresight.</p>
+<section id="what-the-neutral-reader-caught" class="level2">
+<h2 class="anchored" data-anchor-id="what-the-neutral-reader-caught">What the neutral reader caught</h2>
+<p>The first run failed, and not where I expected. Two places in the package were installing a dependency over the network at the wrong moment.</p>
+<p>The test suite did it. <code>tests/testthat/test-sn.R</code> opened with <code>library(devtools)</code> and a call to <code>devtools::install_github("vrunge/gfpop.data")</code>, at test time. One vignette, <code>vignettes/applications.Rmd</code>, did the same thing at vignette-build time. On my machine both were invisible: I already had <code>gfpop.data</code>, the install was a no-op, the tests passed. In the clean CI sandbox they failed with:</p>
+<pre><code>The package "remotes" is required.</code></pre>
+<p><code>devtools::install_github</code> delegates to <code>remotes</code>, and the isolated subprocess that <code>R CMD check</code> spins up to run the tests could not see it.</p>
+<p>That last point is the real lesson. Adding <code>remotes</code> to <code>extra-packages</code> does not fix it (it is already there): a network install inside <code>R CMD check</code> is in the wrong place to begin with. The check runs in its own sandbox, and a build that reaches out to GitHub mid-check is fragile no matter what the workflow preinstalls. So the fix belongs in the package, not the workflow.</p>
 </section>
-<section id="why-a-through-e-is-the-midterm" class="level2">
-<h2 class="anchored" data-anchor-id="why-a-through-e-is-the-midterm">Why A through E is the midterm</h2>
-<p>The slicing is not arbitrary. A through E is exactly the set of “core goals, must deliver” from my <a href="https://github.com/williamzhang7792/gsoc2026-gfpop-proposal-william-zhang/blob/main/proposal.Rmd">proposal</a>, which is what makes it a natural milestone rather than a place I stopped because the clock ran out.</p>
-<p>The mapping is one to one:</p>
-<ul>
-<li><code>Edge(..., rule = ...)</code>, backward compatible: PR B.</li>
-<li><code>gfpop(..., rule = ...)</code>, backward compatible: PR D.</li>
-<li>C++ edge filtering by rule: PR D.</li>
-<li>Infinity handling in the constraint operators: PR D, satisfied by reusing the existing machinery (the surprise above).</li>
-<li>A LOPART model, oracle-validated against <code>LOPART::LOPART()</code>: PR E.</li>
-<li>Regression tests, gfpop with no rule identical to current behavior: PR B, C, and D each carry their own.</li>
-<li><code>R CMD check</code> passes with no new warnings: PR A, and held by all of them.</li>
-</ul>
-<p>Every must-deliver box is checked. The stretch goals are deliberately Part 2: the up-down-with-labels model on synthetic genomic data, the performance benchmarks from a thousand points up to a million, and the capstone vignette with a filmstrip view of the graph changing along the signal. Those are real and they are next; they are just not what the midterm is for.</p>
-</section>
-<section id="where-it-stands" class="level2">
-<h2 class="anchored" data-anchor-id="where-it-stands">Where it stands</h2>
-<p>A and B are open upstream: <a href="https://github.com/vrunge/gfpop/pull/20">#20</a> is the CI workflow, and <a href="https://github.com/vrunge/gfpop/pull/21">#21</a> is the rule API, sitting as a draft so the shape can be discussed before C, D, and E lean on it. C, D, and E are staged on my fork and will become their own PRs once the API in B has settled, since opening them now would only ask the maintainer to review against a moving target.</p>
-<p>The whole stack is assembled and green on a <a href="https://github.com/williamzhang7792/gfpop/tree/prototype/time-dependent-constraints">prototype branch</a>, the LOPART oracle included. That branch is the proof that the diamond closes. The PRs are how I hand it over one honest piece at a time.</p>
+<section id="the-fix" class="level2">
+<h2 class="anchored" data-anchor-id="the-fix">The fix</h2>
+<p>So the infrastructure-only PR grew a second half: make the suite CI-friendly.</p>
+<p>In <code>test-sn.R</code>, the runtime install came out and a dependency check went in. The file asks whether its dependencies are present, then each test skips cleanly if they are not:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>have.sn.deps <span class="ot">&lt;-</span> <span class="fu">requireNamespace</span>(<span class="st">"gfpop.data"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>) <span class="sc">&amp;&amp;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">requireNamespace</span>(<span class="st">"data.table"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">"abs model with 1 segment returned"</span>, {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">skip_if_not</span>(have.sn.deps, <span class="st">"gfpop.data/data.table not installed"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  ...</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Because <code>gfpop.data</code> is preinstalled in CI through <code>extra-packages</code>, <code>have.sn.deps</code> is true on the runners and the <code>sn</code> tests run for real. On a contributor’s machine without the data package, they skip with a clear message instead of trying to reach the network mid-check. The tests are honest about what they need, and they ask the environment instead of reshaping it.</p>
+<p><code>applications.Rmd</code> got the same treatment: the build-time install removed, the vignette now leaning on the preinstalled <code>gfpop.data</code>, with a comment showing how to install it by hand. Two small housekeeping items rounded it out, a <code>^\.github$</code> line in <code>.Rbuildignore</code> so the workflow does not get bundled into the package tarball, and an <code>R-CMD-check</code> badge on the README.</p>
+<p>The result is the thing CI exists to produce. <code>R CMD check</code> reports <code>Status: OK</code>, zero errors, zero warnings, zero notes, on all three operating systems, and the vignettes rebuild without touching the network.</p>
+<p>A green check gives me a neutral reader that runs on three machines that are not mine and flags a break the moment it happens, before anyone else has to find out. It does not make the code correct, but it is the floor a project about to add five PRs of new behavior stands on. It is why I started with the boring one.</p>
 </section>
 <section id="related-prs" class="level2">
 <h2 class="anchored" data-anchor-id="related-prs">Related PRs</h2>
-<p>This post is the hub for the series; each PR gets its own write-up as it goes upstream.</p>
 <ul>
-<li>PR A, CI: <a href="https://github.com/vrunge/gfpop/pull/20">PR #20</a>. Write-up: <a href="../adding-ci/">the first neutral reader</a>.</li>
-<li>PR B, the R rule API: <a href="https://github.com/vrunge/gfpop/pull/21">PR #21</a>, open as a draft.</li>
-<li>PR C, inert C++ plumbing: staged on the <a href="https://github.com/williamzhang7792/gfpop/tree/prototype/time-dependent-constraints">prototype branch</a>, PR to follow once B settles.</li>
-<li>PR D, activation: staged on the <a href="https://github.com/williamzhang7792/gfpop/tree/prototype/time-dependent-constraints">prototype branch</a>, PR to follow.</li>
-<li>PR E, the LOPART oracle: staged on the <a href="https://github.com/williamzhang7792/gfpop/tree/prototype/time-dependent-constraints">prototype branch</a>, PR to follow.</li>
+<li><a href="https://github.com/vrunge/gfpop/pull/20">PR #20</a></li>
 </ul>
 
 
@@ -908,78 +905,94 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     }
   });
   </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "How to hand a maintainer a whole feature: the midterm in five PRs"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "The GSoC midterm deliverable is the core of time-dependent constraints in gfpop. This is the hub post for how it was sliced into five small, independent, backward-compatible pull requests, A through E, with the trunk green the whole way."</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> "William Zhang"</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "2026-06-29"</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="an">categories:</span><span class="co"> [gsoc, gfpop, midterm]</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="an">image:</span><span class="co"> five-prs-diamond.svg</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>The midterm deliverable for my GSoC project is the core feature: it makes the constraint graph vary along the signal, so which edges are allowed depends on where you are in the data. The question here is narrower and more practical: once you have built something that size, how do you hand it to a maintainer?</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>Not as one diff. A single pull request that adds an R argument, threads it through the C++ solver, changes the dynamic-programming loops, and lands a new validated model is a request the reviewer cannot actually review. They can skim it, trust it, and merge it, or they can refuse it. Neither is what you want. What you want is for the maintainer to read each piece, agree with it on its own terms, and merge it while the rest is still on your fork.</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>So the work is five pull requests, A through E. Each one is small enough to read in a sitting, backward compatible by construction, and mergeable on its own. The trunk stays green from the first to the last. The opener is deliberately boring. The payoff at the end is an oracle test.</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">## The five PRs</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>**PR A, CI.** A GitHub Actions <span class="in">`R-CMD-check`</span> workflow across Ubuntu, macOS, and Windows. This is the dull one on purpose, the foundation everything else stands on: a neutral reader that checks the package on three machines that are not mine, on every push. It earned its own write-up, <span class="co">[</span><span class="ot">the first neutral reader</span><span class="co">](../adding-ci/)</span>, because turning it on surfaced a network install hiding inside the test suite and the fix was in the package, not the YAML. Fully independent of the rest. Open upstream as <span class="co">[</span><span class="ot">#20</span><span class="co">](https://github.com/vrunge/gfpop/pull/20)</span>.</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>**PR B, the R rule API.** This adds a backward-compatible <span class="in">`rule`</span> column to <span class="in">`Edge()`</span>, and carries it through <span class="in">`graph()`</span>, <span class="in">`StartEnd()`</span>, and <span class="in">`Node()`</span>. The default is <span class="in">`NA`</span>, which means an edge is active in every rule, so a graph written today behaves exactly as it did before. Pure R, and no behavior change yet: the column is recorded and ignored. It is its own PR because the API shape is the part most worth arguing about before any code depends on it, so it goes up as a draft, <span class="co">[</span><span class="ot">#21</span><span class="co">](https://github.com/vrunge/gfpop/pull/21)</span>, to invite that argument early.</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>**PR C, the inert C++ plumbing.** This adds the <span class="in">`ruleID`</span> field to the C++ edge representation, a getter, a <span class="in">`Graph::isActive()`</span> helper, and a defensive read of the new rule column out of the R graph. Nothing consumes any of it yet, so every result is bit-for-bit what it was before. It is backward compatible by construction, and an inert-equality test proves it. Splitting the plumbing from the activation means the reviewer can confirm the new machinery is genuinely dormant before they look at the switch that turns it on. Independent of B in principle, stacked on it in practice, for a reason I will get to.</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>**PR D, activation.** This is the behavioral switch. It threads a per-data-point rule vector through <span class="in">`gfpop()`</span> and into the solver, and skips inactive edges inside the dynamic-programming loops. Before D, the rule column is a passenger; after D, it steers. It depends on B for the API and C for the C++ scaffolding. This is also where the work was expected to be hard, and the honest note below is about why it was not.</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>**PR E, the LOPART oracle.** The midterm payoff. It builds the four-rule, two-state graph that expresses LOPART, constructs the rule vector from a set of labels, and then asserts that gfpop with the <span class="in">`rule`</span> argument reproduces <span class="in">`LOPART::LOPART()`</span> exactly: the same change-points, the same segment means, the same loss. It depends on D, because it is the first thing that runs the whole chain end to end and checks the answer against an independent implementation.</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="fu">## How they depend on each other</span></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>A, B, and C are independent. Each one can be built straight off <span class="in">`master`</span> without the other two. D needs B and C. E needs D.</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="al">![The midterm as five pull requests: PR A stands alone, while PRs B and C converge on D, which leads to E.](five-prs-diamond.svg)</span></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>The true shape is a diamond, but in practice I built it as a straight line, A then B then C then D then E. The reason is small and concrete. C's inert-equality test is cleaner when it can use B's new <span class="in">`Edge(rule = ...)`</span> API to construct its test graph, rather than reaching around it. Stacking C on B costs nothing, since D needs both anyway, and a linear stack is far simpler to keep green than a diamond you have to merge back together. When the difference between the honest dependency graph and the build order is one convenience edge, take the simpler build order.</span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="fu">## What's hard</span></span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>PR D was supposed to be the hard one. The proposal called out infinity handling in the constraint operators as the risk: when an edge is switched off, the cost of taking it has to become infinite in a way the operators downstream handle without breaking, and I expected to be editing the <span class="in">`min`</span>-cost operators one by one to make that true.</span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>I did not have to touch them. The solver already initializes unreachable states to positive infinity, and the whole functional-pruning machinery is already built to propagate that correctly. Skipping an inactive edge is, as far as the operators are concerned, the same as never having had a path to it, which is a case they have always handled. The part I had budgeted the most worry for turned out to be free. That happens sometimes, and it is worth saying plainly rather than dressing it up as foresight.</span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="fu">## Why A through E is the midterm</span></span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>The slicing is not arbitrary. A through E is exactly the set of "core goals, must deliver" from my <span class="co">[</span><span class="ot">proposal</span><span class="co">](https://github.com/williamzhang7792/gsoc2026-gfpop-proposal-william-zhang/blob/main/proposal.Rmd)</span>, which is what makes it a natural milestone rather than a place I stopped because the clock ran out.</span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>The mapping is one to one:</span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`Edge(..., rule = ...)`</span>, backward compatible: PR B.</span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`gfpop(..., rule = ...)`</span>, backward compatible: PR D.</span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>C++ edge filtering by rule: PR D.</span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Infinity handling in the constraint operators: PR D, satisfied by reusing the existing machinery (the surprise above).</span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A LOPART model, oracle-validated against <span class="in">`LOPART::LOPART()`</span>: PR E.</span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Regression tests, gfpop with no rule identical to current behavior: PR B, C, and D each carry their own.</span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`R CMD check`</span> passes with no new warnings: PR A, and held by all of them.</span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>Every must-deliver box is checked. The stretch goals are deliberately Part 2: the up-down-with-labels model on synthetic genomic data, the performance benchmarks from a thousand points up to a million, and the capstone vignette with a filmstrip view of the graph changing along the signal. Those are real and they are next; they are just not what the midterm is for.</span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a><span class="fu">## Where it stands</span></span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>A and B are open upstream: <span class="co">[</span><span class="ot">#20</span><span class="co">](https://github.com/vrunge/gfpop/pull/20)</span> is the CI workflow, and <span class="co">[</span><span class="ot">#21</span><span class="co">](https://github.com/vrunge/gfpop/pull/21)</span> is the rule API, sitting as a draft so the shape can be discussed before C, D, and E lean on it. C, D, and E are staged on my fork and will become their own PRs once the API in B has settled, since opening them now would only ask the maintainer to review against a moving target.</span>
-<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>The whole stack is assembled and green on a <span class="co">[</span><span class="ot">prototype branch</span><span class="co">](https://github.com/williamzhang7792/gfpop/tree/prototype/time-dependent-constraints)</span>, the LOPART oracle included. That branch is the proof that the diamond closes. The PRs are how I hand it over one honest piece at a time.</span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a><span class="fu">## Related PRs</span></span>
-<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>This post is the hub for the series; each PR gets its own write-up as it goes upstream.</span>
-<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>PR A, CI: <span class="co">[</span><span class="ot">PR #20</span><span class="co">](https://github.com/vrunge/gfpop/pull/20)</span>. Write-up: <span class="co">[</span><span class="ot">the first neutral reader</span><span class="co">](../adding-ci/)</span>.</span>
-<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>PR B, the R rule API: <span class="co">[</span><span class="ot">PR #21</span><span class="co">](https://github.com/vrunge/gfpop/pull/21)</span>, open as a draft.</span>
-<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>PR C, inert C++ plumbing: staged on the <span class="co">[</span><span class="ot">prototype branch</span><span class="co">](https://github.com/williamzhang7792/gfpop/tree/prototype/time-dependent-constraints)</span>, PR to follow once B settles.</span>
-<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>PR D, activation: staged on the <span class="co">[</span><span class="ot">prototype branch</span><span class="co">](https://github.com/williamzhang7792/gfpop/tree/prototype/time-dependent-constraints)</span>, PR to follow.</span>
-<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>PR E, the LOPART oracle: staged on the <span class="co">[</span><span class="ot">prototype branch</span><span class="co">](https://github.com/williamzhang7792/gfpop/tree/prototype/time-dependent-constraints)</span>, PR to follow.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Adding CI to gfpop: the first neutral reader"</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "PR A of the midterm series turns on GitHub Actions for gfpop. The boring infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config."</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> "William Zhang"</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "2026-06-29"</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="an">categories:</span><span class="co"> [gsoc, gfpop, contribution, ci, midterm]</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the dull one: add a continuous-integration workflow so that everything after it gets checked on every push, and move on. Plumbing. No new behavior, no API.</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>It did not stay dull, and the reason is worth a post.</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="fu">## What CI actually is</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>Turning CI on is the first time the package runs somewhere that is not my laptop. A fresh Ubuntu, macOS, and Windows runner, R release, nothing installed that I forgot I had installed two years ago. CI is the first neutral reader of your code. It has none of your context, and so it tells you, plainly, what your own machine has been quietly hiding.</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>What it told me here was that gfpop could not go green by configuration alone. The package source had to change.</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="fu">## The workflow</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>The file is the standard <span class="in">`r-lib`</span> <span class="in">`R-CMD-check`</span>, dropped at <span class="in">`.github/workflows/R-CMD-check.yaml`</span>. A three-OS matrix on R release, and triggers that fire on a push to any branch and on pull requests into <span class="in">`main`</span> or <span class="in">`master`</span>:</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="in">```yaml</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> master</span><span class="kw">]</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>The one part that matters for the rest of this story is dependency setup. CI preinstalls what the check needs before it runs:</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="in">```yaml</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-r-dependencies@v2</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="fu">    extra-packages</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>      any::rcmdcheck</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>      any::remotes</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>      github::vrunge/gfpop.data</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> check</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>Note the last line. <span class="in">`gfpop.data`</span> is GitHub-only, not on CRAN, so CI installs it from GitHub with the <span class="in">`github::`</span> prefix. That detail is the whole knot, so hold onto it.</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>One choice worth a sentence: the push trigger is a bare <span class="in">`push:`</span>, which runs on every branch, not just <span class="in">`main`</span> and <span class="in">`master`</span>. That is convenient for getting a green check before a pull request exists. It also spends the maintainer's Actions minutes on every branch push once this is upstream, so the PR offers to restrict it if Vincent would rather.</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a><span class="fu">## What the neutral reader caught</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>The first run failed, and not where I expected. Two places in the package were installing a dependency over the network at the wrong moment.</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>The test suite did it. <span class="in">`tests/testthat/test-sn.R`</span> opened with <span class="in">`library(devtools)`</span> and a call to <span class="in">`devtools::install_github("vrunge/gfpop.data")`</span>, at test time. One vignette, <span class="in">`vignettes/applications.Rmd`</span>, did the same thing at vignette-build time. On my machine both were invisible: I already had <span class="in">`gfpop.data`</span>, the install was a no-op, the tests passed. In the clean CI sandbox they failed with:</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a><span class="in">The package "remotes" is required.</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a><span class="in">`devtools::install_github`</span> delegates to <span class="in">`remotes`</span>, and the isolated subprocess that <span class="in">`R CMD check`</span> spins up to run the tests could not see it.</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>That last point is the real lesson. Adding <span class="in">`remotes`</span> to <span class="in">`extra-packages`</span> does not fix it (it is already there): a network install inside <span class="in">`R CMD check`</span> is in the wrong place to begin with. The check runs in its own sandbox, and a build that reaches out to GitHub mid-check is fragile no matter what the workflow preinstalls. So the fix belongs in the package, not the workflow.</span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="fu">## The fix</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>So the infrastructure-only PR grew a second half: make the suite CI-friendly.</span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>In <span class="in">`test-sn.R`</span>, the runtime install came out and a dependency check went in. The file asks whether its dependencies are present, then each test skips cleanly if they are not:</span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>have.sn.deps <span class="ot">&lt;-</span> <span class="fu">requireNamespace</span>(<span class="st">"gfpop.data"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>) <span class="sc">&amp;&amp;</span></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>  <span class="fu">requireNamespace</span>(<span class="st">"data.table"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">"abs model with 1 segment returned"</span>, {</span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>  <span class="fu">skip_if_not</span>(have.sn.deps, <span class="st">"gfpop.data/data.table not installed"</span>)</span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>  ...</span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>Because <span class="in">`gfpop.data`</span> is preinstalled in CI through <span class="in">`extra-packages`</span>, <span class="in">`have.sn.deps`</span> is true on the runners and the <span class="in">`sn`</span> tests run for real. On a contributor's machine without the data package, they skip with a clear message instead of trying to reach the network mid-check. The tests are honest about what they need, and they ask the environment instead of reshaping it.</span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a><span class="in">`applications.Rmd`</span> got the same treatment: the build-time install removed, the vignette now leaning on the preinstalled <span class="in">`gfpop.data`</span>, with a comment showing how to install it by hand. Two small housekeeping items rounded it out, a <span class="in">`^\.github$`</span> line in <span class="in">`.Rbuildignore`</span> so the workflow does not get bundled into the package tarball, and an <span class="in">`R-CMD-check`</span> badge on the README.</span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>The result is the thing CI exists to produce. <span class="in">`R CMD check`</span> reports <span class="in">`Status: OK`</span>, zero errors, zero warnings, zero notes, on all three operating systems, and the vignettes rebuild without touching the network.</span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>A green check gives me a neutral reader that runs on three machines that are not mine and flags a break the moment it happens, before anyone else has to find out. It does not make the code correct, but it is the floor a project about to add five PRs of new behavior stands on. It is why I started with the boring one.</span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a><span class="fu">## Related PRs</span></span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">PR #20</span><span class="co">](https://github.com/vrunge/gfpop/pull/20)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 

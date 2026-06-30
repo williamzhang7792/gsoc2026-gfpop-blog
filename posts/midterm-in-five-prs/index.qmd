@@ -15,7 +15,7 @@ So the work is five pull requests, A through E. Each one is small enough to read
 
 ## The five PRs
 
-**PR A, CI.** A GitHub Actions `R-CMD-check` workflow across Ubuntu, macOS, and Windows. This is the dull one on purpose, the foundation everything else stands on: a neutral reader that checks the package on three machines that are not mine, on every push. It earned its own write-up, coming next in this series, because turning it on surfaced a network install hiding inside the test suite and the fix was in the package, not the YAML. Fully independent of the rest. Open upstream as [#20](https://github.com/vrunge/gfpop/pull/20).
+**PR A, CI.** A GitHub Actions `R-CMD-check` workflow across Ubuntu, macOS, and Windows. This is the dull one on purpose, the foundation everything else stands on: a neutral reader that checks the package on three machines that are not mine, on every push. It earned its own write-up, [the first neutral reader](../adding-ci/), because turning it on surfaced a network install hiding inside the test suite and the fix was in the package, not the YAML. Fully independent of the rest. Open upstream as [#20](https://github.com/vrunge/gfpop/pull/20).
 
 **PR B, the R rule API.** This adds a backward-compatible `rule` column to `Edge()`, and carries it through `graph()`, `StartEnd()`, and `Node()`. The default is `NA`, which means an edge is active in every rule, so a graph written today behaves exactly as it did before. Pure R, and no behavior change yet: the column is recorded and ignored. It is its own PR because the API shape is the part most worth arguing about before any code depends on it, so it goes up as a draft, [#21](https://github.com/vrunge/gfpop/pull/21), to invite that argument early.
 
@@ -65,7 +65,7 @@ The whole stack is assembled and green on a [prototype branch](https://github.co
 
 This post is the hub for the series; each PR gets its own write-up as it goes upstream.
 
-- PR A, CI: [PR #20](https://github.com/vrunge/gfpop/pull/20). Write-up: coming next.
+- PR A, CI: [PR #20](https://github.com/vrunge/gfpop/pull/20). Write-up: [the first neutral reader](../adding-ci/).
 - PR B, the R rule API: [PR #21](https://github.com/vrunge/gfpop/pull/21), open as a draft.
 - PR C, inert C++ plumbing: staged on the [prototype branch](https://github.com/williamzhang7792/gfpop/tree/prototype/time-dependent-constraints), PR to follow once B settles.
 - PR D, activation: staged on the [prototype branch](https://github.com/williamzhang7792/gfpop/tree/prototype/time-dependent-constraints), PR to follow.
