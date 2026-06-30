@@ -8,7 +8,6 @@
 
 <meta name="author" content="William Zhang">
 <meta name="dcterms.date" content="2026-06-30">
-<meta name="description" content="PR A of the midterm series turns on GitHub Actions for gfpop. This infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config.">
 
 <title>Adding CI to gfpop: the first neutral reader – gsoc2026-gfpop-blog</title>
 <style>
@@ -350,11 +349,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
   </div>
 
-<div>
-  <div class="description">
-    PR A of the midterm series turns on GitHub Actions for gfpop. This infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config.
-  </div>
-</div>
 
 
 <div class="quarto-title-meta">
@@ -907,92 +901,91 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Adding CI to gfpop: the first neutral reader"</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "PR A of the midterm series turns on GitHub Actions for gfpop. This infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config."</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> "William Zhang"</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "2026-06-30"</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="an">categories:</span><span class="co"> [gsoc, gfpop, contribution, ci, midterm]</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the "dull" one: add a continuous-integration workflow so that everything after it gets checked on every push, and move on.</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>But still, I faced one challenge that I had to fix.</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="fu">## What CI actually is</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>Turning CI on is the first time the package runs somewhere that is not my laptop. A fresh Ubuntu, macOS, and Windows runner, R release, nothing installed that I forgot I had installed two years ago. CI is the first neutral reader of your code. It has none of your context, and so it tells you, plainly, what your own machine has been quietly hiding.</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>What it told me here was that gfpop could not go green by configuration alone. The package source had to change.</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="fu">## The workflow</span></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>The file is the standard <span class="in">`r-lib`</span> <span class="in">`R-CMD-check`</span>, dropped at <span class="in">`.github/workflows/R-CMD-check.yaml`</span>. A three-OS matrix on R release, and triggers that fire on a push to any branch and on pull requests into <span class="in">`main`</span> or <span class="in">`master`</span>:</span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="in">```yaml</span></span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> master</span><span class="kw">]</span></span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>The one part that matters for the rest of this story is dependency setup. CI preinstalls what the check needs before it runs:</span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="in">```yaml</span></span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-r-dependencies@v2</span></span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">with</span><span class="kw">:</span></span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="fu">    extra-packages</span><span class="kw">: </span><span class="ch">|</span></span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>      any::rcmdcheck</span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>      any::remotes</span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>      github::vrunge/gfpop.data</span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> check</span></span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>Note the last line. <span class="in">`gfpop.data`</span> is GitHub-only, not on CRAN, so CI installs it from GitHub with the <span class="in">`github::`</span> prefix. That detail is the whole knot, so hold onto it.</span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>One choice worth a sentence: the push trigger is a bare <span class="in">`push:`</span>, which runs on every branch, not just <span class="in">`main`</span> and <span class="in">`master`</span>. That is convenient for getting a green check before a pull request exists. It also spends the maintainer's Actions minutes on every branch push once this is upstream, so the PR offers to restrict it if Vincent would rather.</span>
-<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a><span class="fu">## What the neutral reader caught</span></span>
-<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>The first run failed, and not where I expected. Two places in the package were installing a dependency over the network at the wrong moment.</span>
-<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>The test suite did it. <span class="in">`tests/testthat/test-sn.R`</span> opened with <span class="in">`library(devtools)`</span> and a call to <span class="in">`devtools::install_github("vrunge/gfpop.data")`</span>, at test time. One vignette, <span class="in">`vignettes/applications.Rmd`</span>, did the same thing at vignette-build time. On my machine both were invisible: I already had <span class="in">`gfpop.data`</span>, the install was a no-op, the tests passed. In the clean CI sandbox they failed with:</span>
-<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a><span class="in">The package "remotes" is required.</span></span>
-<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a><span class="in">`devtools::install_github`</span> delegates to <span class="in">`remotes`</span>, and the isolated subprocess that <span class="in">`R CMD check`</span> spins up to run the tests could not see it.</span>
-<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>That last point is the real lesson. Adding <span class="in">`remotes`</span> to <span class="in">`extra-packages`</span> does not fix it (it is already there): a network install inside <span class="in">`R CMD check`</span> is in the wrong place to begin with. The check runs in its own sandbox, and a build that reaches out to GitHub mid-check is fragile no matter what the workflow preinstalls. So the fix belongs in the package, not the workflow.</span>
-<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="fu">## The fix</span></span>
-<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>So the infrastructure-only PR grew a second half: make the suite CI-friendly.</span>
-<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>In <span class="in">`test-sn.R`</span>, the runtime install came out and a dependency check went in. The file asks whether its dependencies are present, then each test skips cleanly if they are not:</span>
-<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a><span class="in">```r</span></span>
-<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>have.sn.deps <span class="ot">&lt;-</span> <span class="fu">requireNamespace</span>(<span class="st">"gfpop.data"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>) <span class="sc">&amp;&amp;</span></span>
-<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>  <span class="fu">requireNamespace</span>(<span class="st">"data.table"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a><span class="in">```r</span></span>
-<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">"abs model with 1 segment returned"</span>, {</span>
-<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>  <span class="fu">skip_if_not</span>(have.sn.deps, <span class="st">"gfpop.data/data.table not installed"</span>)</span>
-<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>  ...</span>
-<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>Because <span class="in">`gfpop.data`</span> is preinstalled in CI through <span class="in">`extra-packages`</span>, <span class="in">`have.sn.deps`</span> is true on the runners and the <span class="in">`sn`</span> tests run for real. On a contributor's machine without the data package, they skip with a clear message instead of trying to reach the network mid-check. The tests are honest about what they need, and they ask the environment instead of reshaping it.</span>
-<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a><span class="in">`applications.Rmd`</span> got the same treatment: the build-time install removed, the vignette now leaning on the preinstalled <span class="in">`gfpop.data`</span>, with a comment showing how to install it by hand. Two small housekeeping items rounded it out, a <span class="in">`^\.github$`</span> line in <span class="in">`.Rbuildignore`</span> so the workflow does not get bundled into the package tarball, and an <span class="in">`R-CMD-check`</span> badge on the README.</span>
-<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>The result is the thing CI exists to produce. <span class="in">`R CMD check`</span> reports <span class="in">`Status: OK`</span>, zero errors, zero warnings, zero notes, on all three operating systems, and the vignettes rebuild without touching the network.</span>
-<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>A green check gives me a neutral reader that runs on three machines that are not mine and flags a break the moment it happens, before anyone else has to find out. It does not make the code correct, but it is the floor a project about to add five PRs of new behavior stands on. It is why I started with CI.</span>
-<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a><span class="fu">## Related PRs</span></span>
-<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">PR #20</span><span class="co">](https://github.com/vrunge/gfpop/pull/20)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> "William Zhang"</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "2026-06-30"</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="an">categories:</span><span class="co"> [gsoc, gfpop, contribution, ci, midterm]</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the "dull" one: add a continuous-integration workflow so that everything after it gets checked on every push, and move on.</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>But still, I faced one challenge that I had to fix.</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="fu">## What CI actually is</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>Turning CI on is the first time the package runs somewhere that is not my laptop. A fresh Ubuntu, macOS, and Windows runner, R release, nothing installed that I forgot I had installed two years ago. CI is the first neutral reader of your code. It has none of your context, and so it tells you, plainly, what your own machine has been quietly hiding.</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>What it told me here was that gfpop could not go green by configuration alone. The package source had to change.</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="fu">## The workflow</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>The file is the standard <span class="in">`r-lib`</span> <span class="in">`R-CMD-check`</span>, dropped at <span class="in">`.github/workflows/R-CMD-check.yaml`</span>. A three-OS matrix on R release, and triggers that fire on a push to any branch and on pull requests into <span class="in">`main`</span> or <span class="in">`master`</span>:</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="in">```yaml</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> master</span><span class="kw">]</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>The one part that matters for the rest of this story is dependency setup. CI preinstalls what the check needs before it runs:</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="in">```yaml</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-r-dependencies@v2</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="fu">    extra-packages</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>      any::rcmdcheck</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>      any::remotes</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>      github::vrunge/gfpop.data</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> check</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>Note the last line. <span class="in">`gfpop.data`</span> is GitHub-only, not on CRAN, so CI installs it from GitHub with the <span class="in">`github::`</span> prefix. That detail is the whole knot, so hold onto it.</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>One choice worth a sentence: the push trigger is a bare <span class="in">`push:`</span>, which runs on every branch, not just <span class="in">`main`</span> and <span class="in">`master`</span>. That is convenient for getting a green check before a pull request exists. It also spends the maintainer's Actions minutes on every branch push once this is upstream, so the PR offers to restrict it if Vincent would rather.</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a><span class="fu">## What the neutral reader caught</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>The first run failed, and not where I expected. Two places in the package were installing a dependency over the network at the wrong moment.</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>The test suite did it. <span class="in">`tests/testthat/test-sn.R`</span> opened with <span class="in">`library(devtools)`</span> and a call to <span class="in">`devtools::install_github("vrunge/gfpop.data")`</span>, at test time. One vignette, <span class="in">`vignettes/applications.Rmd`</span>, did the same thing at vignette-build time. On my machine both were invisible: I already had <span class="in">`gfpop.data`</span>, the install was a no-op, the tests passed. In the clean CI sandbox they failed with:</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="in">The package "remotes" is required.</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a><span class="in">`devtools::install_github`</span> delegates to <span class="in">`remotes`</span>, and the isolated subprocess that <span class="in">`R CMD check`</span> spins up to run the tests could not see it.</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>That last point is the real lesson. Adding <span class="in">`remotes`</span> to <span class="in">`extra-packages`</span> does not fix it (it is already there): a network install inside <span class="in">`R CMD check`</span> is in the wrong place to begin with. The check runs in its own sandbox, and a build that reaches out to GitHub mid-check is fragile no matter what the workflow preinstalls. So the fix belongs in the package, not the workflow.</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a><span class="fu">## The fix</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>So the infrastructure-only PR grew a second half: make the suite CI-friendly.</span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>In <span class="in">`test-sn.R`</span>, the runtime install came out and a dependency check went in. The file asks whether its dependencies are present, then each test skips cleanly if they are not:</span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>have.sn.deps <span class="ot">&lt;-</span> <span class="fu">requireNamespace</span>(<span class="st">"gfpop.data"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>) <span class="sc">&amp;&amp;</span></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>  <span class="fu">requireNamespace</span>(<span class="st">"data.table"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">"abs model with 1 segment returned"</span>, {</span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>  <span class="fu">skip_if_not</span>(have.sn.deps, <span class="st">"gfpop.data/data.table not installed"</span>)</span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>  ...</span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a>Because <span class="in">`gfpop.data`</span> is preinstalled in CI through <span class="in">`extra-packages`</span>, <span class="in">`have.sn.deps`</span> is true on the runners and the <span class="in">`sn`</span> tests run for real. On a contributor's machine without the data package, they skip with a clear message instead of trying to reach the network mid-check. The tests are honest about what they need, and they ask the environment instead of reshaping it.</span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a><span class="in">`applications.Rmd`</span> got the same treatment: the build-time install removed, the vignette now leaning on the preinstalled <span class="in">`gfpop.data`</span>, with a comment showing how to install it by hand. Two small housekeeping items rounded it out, a <span class="in">`^\.github$`</span> line in <span class="in">`.Rbuildignore`</span> so the workflow does not get bundled into the package tarball, and an <span class="in">`R-CMD-check`</span> badge on the README.</span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a>The result is the thing CI exists to produce. <span class="in">`R CMD check`</span> reports <span class="in">`Status: OK`</span>, zero errors, zero warnings, zero notes, on all three operating systems, and the vignettes rebuild without touching the network.</span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a>A green check gives me a neutral reader that runs on three machines that are not mine and flags a break the moment it happens, before anyone else has to find out. It does not make the code correct, but it is the floor a project about to add five PRs of new behavior stands on. It is why I started with CI.</span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a><span class="fu">## Related PRs</span></span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">PR #20</span><span class="co">](https://github.com/vrunge/gfpop/pull/20)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 
