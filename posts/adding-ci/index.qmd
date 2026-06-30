@@ -2,7 +2,7 @@
 title: "Adding CI to gfpop: the first neutral reader"
 description: "PR A of the midterm series turns on GitHub Actions for gfpop. The boring infrastructure PR surfaced a network install hiding inside R CMD check, and fixing it meant changing the package, not just the config."
 author: "William Zhang"
-date: "2026-06-29"
+date: "2026-06-30"
 categories: [gsoc, gfpop, contribution, ci, midterm]
 ---
 

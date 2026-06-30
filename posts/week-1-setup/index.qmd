@@ -2,7 +2,7 @@
 title: "Starting GSoC 2026: the project and how this blog works"
 description: "An introduction to my GSoC 2026 project on time-dependent constraints in gfpop, and how this blog is organized."
 author: "William Zhang"
-date: "2026-06-29"
+date: "2026-06-28"
 categories: [gsoc, gfpop, intro]
 image: cp-signal.svg
 ---

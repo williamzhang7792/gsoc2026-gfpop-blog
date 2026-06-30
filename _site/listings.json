@@ -2,9 +2,9 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/week-1-setup/index.html",
       "/posts/adding-ci/index.html",
-      "/posts/midterm-in-five-prs/index.html"
+      "/posts/midterm-in-five-prs/index.html",
+      "/posts/week-1-setup/index.html"
     ]
   }
 ]
