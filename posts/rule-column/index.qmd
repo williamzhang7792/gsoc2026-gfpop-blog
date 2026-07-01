@@ -1,0 +1,42 @@
+---
+title: "Adding a rule column to gfpop: backward compatible by default"
+author: "William Zhang"
+date: "2026-06-30"
+categories: [gsoc, gfpop, contribution, rule]
+---
+
+PR B is the second in the midterm series and the first one that touches the API. It adds a `rule` column to gfpop's graph, the column that later PRs will use to switch edges on and off along the signal. On its own it does nothing yet, by design.
+
+## What the column is
+
+A gfpop graph is a data frame of edges. Each row is one allowed transition, carrying its type, penalty, and parameters. PR B gives each row one more field: `rule`, an integer id, defaulting to `NA`.
+
+`NA` means the edge is active under every rule. A graph built the old way, with no rule set, has `NA` on every edge and behaves exactly as it did before. The column is recorded and ignored until PR D teaches the solver to read it.
+
+It is added wherever a graph is built. `Edge()` takes a new `rule =` argument, and `graph()`, `StartEnd()`, and `Node()` all carry the field, so the data frame has the same shape no matter how you assemble it.
+
+```r
+# default rule = NA: active in every rule, identical to before
+Edge("bkg", "bkg", type = "null")
+
+# explicit: this edge is active only under rule 2
+Edge("bkg", "peak", type = "up", penalty = 10, rule = 2)
+```
+
+## Why it goes upstream first, as a draft
+
+The rule column is the API surface everything else is built on. Once PRs C and D depend on its shape, changing it is expensive. So it goes upstream on its own, as a draft: [#21](https://github.com/vrunge/gfpop/pull/21). The draft is an invitation. Before I stack three more PRs on this shape, I want Vincent's read on whether a per-edge integer id is the right way to express a rule, while it is still cheap to change.
+
+## Backward compatibility
+
+The `NA` default exists so that nothing changes for existing code, and that is a claim worth a test rather than a promise. PR B adds `tests/testthat/test-rule.R`: twenty-two tests covering the default and explicit `rule` on `Edge()`, the validation errors for a bad value, that `StartEnd()` and `Node()` carry the same column as `Edge()`, that reordering a graph preserves its rule values, and a full `gfpop()` solve that returns the same result with the column present as without it.
+
+One test paid for itself right away. I first declared the empty graph skeletons with `numeric(0)`, a double. When `graphReorder()` rebuilds a graph by row-binding, a double rule column stays double, and the test that checks the reordered values came back "equal but not identical": `1` where it wanted `1L`. The fix was to declare the skeleton column as `integer(0)`, so the rule stays a clean integer from the R side through to the integer vector the C++ will read in PR D. Small, but the test caught it before it could turn into a confusing type mismatch later.
+
+## A small blast radius
+
+`graphReorder()` needed no new logic. It indexes its columns by position, so the rule column travels along with the rest untouched. PR B adds a field and changes no behavior, which is what makes it safe to put in front of the maintainer first.
+
+## Related PRs
+
+- [PR #21](https://github.com/vrunge/gfpop/pull/21), open as a draft so the rule API can be discussed before later PRs build on it.

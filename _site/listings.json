@@ -3,6 +3,7 @@
     "listing": "/index.html",
     "items": [
       "/posts/adding-ci/index.html",
+      "/posts/rule-column/index.html",
       "/posts/midterm-in-five-prs/index.html",
       "/posts/week-1-setup/index.html"
     ]

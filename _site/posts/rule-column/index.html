@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="William Zhang">
+<meta name="dcterms.date" content="2026-06-30">
 
-<title>gsoc2026-gfpop-blog</title>
+<title>Adding a rule column to gfpop: backward compatible by default – gsoc2026-gfpop-blog</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -23,32 +25,65 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-158031087360bce0ff56dc785ce39e06.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-5685cd926c25366c96d9f1407e584118.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-158031087360bce0ff56dc785ce39e06.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-158031087360bce0ff56dc785ce39e06.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-5685cd926c25366c96d9f1407e584118.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-158031087360bce0ff56dc785ce39e06.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -76,67 +111,9 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
 
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-description','listing-categories','listing-reading-time',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
 <body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -304,11 +281,11 @@ window.Quarto = {
   </script>
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">gsoc2026-gfpop-blog</span>
     </a>
   </div>
@@ -319,11 +296,11 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="../../index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -340,161 +317,100 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">gsoc2026-gfpop-blog</h1>
-            <p class="subtitle lead">Contribution log &amp; tutorials for the gfpop R package</p>
-                      </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta column-page-left">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(4)</span></div><div class="category" data-category="Y2k=">ci <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Y29udHJpYnV0aW9u">contribution <span class="quarto-category-count">(2)</span></div><div class="category" data-category="Z2Zwb3A=">gfpop <span class="quarto-category-count">(4)</span></div><div class="category" data-category="Z3NvYw==">gsoc <span class="quarto-category-count">(4)</span></div><div class="category" data-category="aW50cm8=">intro <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bWlkdGVybQ==">midterm <span class="quarto-category-count">(2)</span></div><div class="category" data-category="cnVsZQ==">rule <span class="quarto-category-count">(1)</span></div></div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#what-the-column-is" id="toc-what-the-column-is" class="nav-link active" data-scroll-target="#what-the-column-is">What the column is</a></li>
+  <li><a href="#why-it-goes-upstream-first-as-a-draft" id="toc-why-it-goes-upstream-first-as-a-draft" class="nav-link" data-scroll-target="#why-it-goes-upstream-first-as-a-draft">Why it goes upstream first, as a draft</a></li>
+  <li><a href="#backward-compatibility" id="toc-backward-compatibility" class="nav-link" data-scroll-target="#backward-compatibility">Backward compatibility</a></li>
+  <li><a href="#a-small-blast-radius" id="toc-a-small-blast-radius" class="nav-link" data-scroll-target="#a-small-blast-radius">A small blast radius</a></li>
+  <li><a href="#related-prs" id="toc-related-prs" class="nav-link" data-scroll-target="#related-prs">Related PRs</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">Adding a rule column to gfpop: backward compatible by default</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+  <div class="quarto-categories">
+    <div class="quarto-category">gsoc</div>
+    <div class="quarto-category">gfpop</div>
+    <div class="quarto-category">contribution</div>
+    <div class="quarto-category">rule</div>
+  </div>
+  </div>
 
 
 
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>William Zhang </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 30, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
 
 
-
-<p>Posts documenting my <a href="https://summerofcode.withgoogle.com/">Google Summer of Code 2026</a> work on <a href="https://github.com/vrunge/gfpop"><strong>gfpop</strong></a>. It is graph-constrained change-point detection in R. Each contribution post links the upstream pull request it describes.</p>
-
+</header>
 
 
+<p>PR B is the second in the midterm series and the first one that touches the API. It adds a <code>rule</code> column to gfpop’s graph, the column that later PRs will use to switch edges on and off along the signal. On its own it does nothing yet, by design.</p>
+<section id="what-the-column-is" class="level2">
+<h2 class="anchored" data-anchor-id="what-the-column-is">What the column is</h2>
+<p>A gfpop graph is a data frame of edges. Each row is one allowed transition, carrying its type, penalty, and parameters. PR B gives each row one more field: <code>rule</code>, an integer id, defaulting to <code>NA</code>.</p>
+<p><code>NA</code> means the edge is active under every rule. A graph built the old way, with no rule set, has <code>NA</code> on every edge and behaves exactly as it did before. The column is recorded and ignored until PR D teaches the solver to read it.</p>
+<p>It is added wherever a graph is built. <code>Edge()</code> takes a new <code>rule =</code> argument, and <code>graph()</code>, <code>StartEnd()</code>, and <code>Node()</code> all carry the field, so the data frame has the same shape no matter how you assemble it.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># default rule = NA: active in every rule, identical to before</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">Edge</span>(<span class="st">"bkg"</span>, <span class="st">"bkg"</span>, <span class="at">type =</span> <span class="st">"null"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># explicit: this edge is active only under rule 2</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">Edge</span>(<span class="st">"bkg"</span>, <span class="st">"peak"</span>, <span class="at">type =</span> <span class="st">"up"</span>, <span class="at">penalty =</span> <span class="dv">10</span>, <span class="at">rule =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="why-it-goes-upstream-first-as-a-draft" class="level2">
+<h2 class="anchored" data-anchor-id="why-it-goes-upstream-first-as-a-draft">Why it goes upstream first, as a draft</h2>
+<p>The rule column is the API surface everything else is built on. Once PRs C and D depend on its shape, changing it is expensive. So it goes upstream on its own, as a draft: <a href="https://github.com/vrunge/gfpop/pull/21">#21</a>. The draft is an invitation. Before I stack three more PRs on this shape, I want Vincent’s read on whether a per-edge integer id is the right way to express a rule, while it is still cheap to change.</p>
+</section>
+<section id="backward-compatibility" class="level2">
+<h2 class="anchored" data-anchor-id="backward-compatibility">Backward compatibility</h2>
+<p>The <code>NA</code> default exists so that nothing changes for existing code, and that is a claim worth a test rather than a promise. PR B adds <code>tests/testthat/test-rule.R</code>: twenty-two tests covering the default and explicit <code>rule</code> on <code>Edge()</code>, the validation errors for a bad value, that <code>StartEnd()</code> and <code>Node()</code> carry the same column as <code>Edge()</code>, that reordering a graph preserves its rule values, and a full <code>gfpop()</code> solve that returns the same result with the column present as without it.</p>
+<p>One test paid for itself right away. I first declared the empty graph skeletons with <code>numeric(0)</code>, a double. When <code>graphReorder()</code> rebuilds a graph by row-binding, a double rule column stays double, and the test that checks the reordered values came back “equal but not identical”: <code>1</code> where it wanted <code>1L</code>. The fix was to declare the skeleton column as <code>integer(0)</code>, so the rule stays a clean integer from the R side through to the integer vector the C++ will read in PR D. Small, but the test caught it before it could turn into a confusing type mismatch later.</p>
+</section>
+<section id="a-small-blast-radius" class="level2">
+<h2 class="anchored" data-anchor-id="a-small-blast-radius">A small blast radius</h2>
+<p><code>graphReorder()</code> needed no new logic. It indexes its columns by position, so the rule column travels along with the rest untouched. PR B adds a field and changes no behavior, which is what makes it safe to put in front of the maintainer first.</p>
+</section>
+<section id="related-prs" class="level2">
+<h2 class="anchored" data-anchor-id="related-prs">Related PRs</h2>
+<ul>
+<li><a href="https://github.com/vrunge/gfpop/pull/21">PR #21</a>, open as a draft so the rule API can be discussed before later PRs build on it.</li>
+</ul>
 
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="Z3NvYyUyQ2dmcG9wJTJDY29udHJpYnV0aW9uJTJDY2klMkNtaWR0ZXJt" data-listing-date-sort="1782774000000" data-listing-file-modified-sort="1782842895725" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="784">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/adding-ci/index.html" class="no-external">Adding CI to gfpop: the first neutral reader</a>
-</h3>
-<div class="listing-categories">
 
-<div class="listing-category" onclick="window.quartoListingCategory('Z3NvYw=='); return false;">gsoc</div>
+<!-- -->
 
-<div class="listing-category" onclick="window.quartoListingCategory('Z2Zwb3A='); return false;">gfpop</div>
+</section>
 
-<div class="listing-category" onclick="window.quartoListingCategory('Y29udHJpYnV0aW9u'); return false;">contribution</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('Y2k='); return false;">ci</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('bWlkdGVybQ=='); return false;">midterm</div>
-
-</div>
-<div class="delink listing-description"><a href="./posts/adding-ci/index.html" class="no-external">
-The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the “dull” one…
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/adding-ci/index.html" class="no-external">
-<div class="listing-date">
-Jun 30, 2026
-</div>
-<div class="listing-reading-time">4 min</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="Z3NvYyUyQ2dmcG9wJTJDY29udHJpYnV0aW9uJTJDcnVsZQ==" data-listing-date-sort="1782774000000" data-listing-file-modified-sort="1782948478058" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="529">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/rule-column/index.html" class="no-external">Adding a rule column to gfpop: backward compatible by default</a>
-</h3>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z3NvYw=='); return false;">gsoc</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z2Zwb3A='); return false;">gfpop</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('Y29udHJpYnV0aW9u'); return false;">contribution</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('cnVsZQ=='); return false;">rule</div>
-
-</div>
-<div class="delink listing-description"><a href="./posts/rule-column/index.html" class="no-external">
-PR B is the second in the midterm series and the first one that touches the API. It adds a <code>rule</code> column to gfpop’s graph, the column that later PRs will use to switch edges…
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/rule-column/index.html" class="no-external">
-<div class="listing-date">
-Jun 30, 2026
-</div>
-<div class="listing-reading-time">3 min</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-categories="Z3NvYyUyQ2dmcG9wJTJDbWlkdGVybQ==" data-listing-date-sort="1782687600000" data-listing-file-modified-sort="1782840862452" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1313">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/midterm-in-five-prs/index.html" class="no-external">How to hand a maintainer a whole feature: the midterm in five PRs</a>
-</h3>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z3NvYw=='); return false;">gsoc</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z2Zwb3A='); return false;">gfpop</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('bWlkdGVybQ=='); return false;">midterm</div>
-
-</div>
-<div class="delink listing-description"><a href="./posts/midterm-in-five-prs/index.html" class="no-external">
-<p>The GSoC midterm deliverable is the core of time-dependent constraints in gfpop. This is the hub post for how it was sliced into five small, independent, backward-compatible pull requests, A through E, with the trunk green the whole way.</p>
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/midterm-in-five-prs/index.html" class="no-external">
-<div class="listing-date">
-Jun 29, 2026
-</div>
-<div class="listing-reading-time">7 min</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-categories="Z3NvYyUyQ2dmcG9wJTJDaW50cm8=" data-listing-date-sort="1782601200000" data-listing-file-modified-sort="1782841603908" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="391">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/week-1-setup/index.html" class="no-external">Starting GSoC 2026: the project and how this blog works</a>
-</h3>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z3NvYw=='); return false;">gsoc</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z2Zwb3A='); return false;">gfpop</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('aW50cm8='); return false;">intro</div>
-
-</div>
-<div class="delink listing-description"><a href="./posts/week-1-setup/index.html" class="no-external">
-<p>An introduction to my GSoC 2026 project on time-dependent constraints in gfpop, and how this blog is organized.</p>
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/week-1-setup/index.html" class="no-external">
-<div class="listing-date">
-Jun 28, 2026
-</div>
-<div class="listing-reading-time">2 min</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
@@ -578,6 +494,57 @@ Jun 28, 2026
         container: window.document.getElementById('quarto-embedded-source-code-modal')
       });
       clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
@@ -907,7 +874,50 @@ Jun 28, 2026
       }
     }
   });
-  </script>
+  </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Adding a rule column to gfpop: backward compatible by default"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> "William Zhang"</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "2026-06-30"</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="an">categories:</span><span class="co"> [gsoc, gfpop, contribution, rule]</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>PR B is the second in the midterm series and the first one that touches the API. It adds a <span class="in">`rule`</span> column to gfpop's graph, the column that later PRs will use to switch edges on and off along the signal. On its own it does nothing yet, by design.</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">## What the column is</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>A gfpop graph is a data frame of edges. Each row is one allowed transition, carrying its type, penalty, and parameters. PR B gives each row one more field: <span class="in">`rule`</span>, an integer id, defaulting to <span class="in">`NA`</span>.</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="in">`NA`</span> means the edge is active under every rule. A graph built the old way, with no rule set, has <span class="in">`NA`</span> on every edge and behaves exactly as it did before. The column is recorded and ignored until PR D teaches the solver to read it.</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>It is added wherever a graph is built. <span class="in">`Edge()`</span> takes a new <span class="in">`rule =`</span> argument, and <span class="in">`graph()`</span>, <span class="in">`StartEnd()`</span>, and <span class="in">`Node()`</span> all carry the field, so the data frame has the same shape no matter how you assemble it.</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co"># default rule = NA: active in every rule, identical to before</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="fu">Edge</span>(<span class="st">"bkg"</span>, <span class="st">"bkg"</span>, <span class="at">type =</span> <span class="st">"null"</span>)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co"># explicit: this edge is active only under rule 2</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="fu">Edge</span>(<span class="st">"bkg"</span>, <span class="st">"peak"</span>, <span class="at">type =</span> <span class="st">"up"</span>, <span class="at">penalty =</span> <span class="dv">10</span>, <span class="at">rule =</span> <span class="dv">2</span>)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="fu">## Why it goes upstream first, as a draft</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>The rule column is the API surface everything else is built on. Once PRs C and D depend on its shape, changing it is expensive. So it goes upstream on its own, as a draft: <span class="co">[</span><span class="ot">#21</span><span class="co">](https://github.com/vrunge/gfpop/pull/21)</span>. The draft is an invitation. Before I stack three more PRs on this shape, I want Vincent's read on whether a per-edge integer id is the right way to express a rule, while it is still cheap to change.</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="fu">## Backward compatibility</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>The <span class="in">`NA`</span> default exists so that nothing changes for existing code, and that is a claim worth a test rather than a promise. PR B adds <span class="in">`tests/testthat/test-rule.R`</span>: twenty-two tests covering the default and explicit <span class="in">`rule`</span> on <span class="in">`Edge()`</span>, the validation errors for a bad value, that <span class="in">`StartEnd()`</span> and <span class="in">`Node()`</span> carry the same column as <span class="in">`Edge()`</span>, that reordering a graph preserves its rule values, and a full <span class="in">`gfpop()`</span> solve that returns the same result with the column present as without it.</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>One test paid for itself right away. I first declared the empty graph skeletons with <span class="in">`numeric(0)`</span>, a double. When <span class="in">`graphReorder()`</span> rebuilds a graph by row-binding, a double rule column stays double, and the test that checks the reordered values came back "equal but not identical": <span class="in">`1`</span> where it wanted <span class="in">`1L`</span>. The fix was to declare the skeleton column as <span class="in">`integer(0)`</span>, so the rule stays a clean integer from the R side through to the integer vector the C++ will read in PR D. Small, but the test caught it before it could turn into a confusing type mismatch later.</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="fu">## A small blast radius</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="in">`graphReorder()`</span> needed no new logic. It indexes its columns by position, so the rule column travels along with the rest untouched. PR B adds a field and changes no behavior, which is what makes it safe to put in front of the maintainer first.</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="fu">## Related PRs</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">PR #21</span><span class="co">](https://github.com/vrunge/gfpop/pull/21)</span>, open as a draft so the rule API can be discussed before later PRs build on it.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
 </div> <!-- /content -->
 
 

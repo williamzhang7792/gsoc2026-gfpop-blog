@@ -21,6 +21,48 @@
     "text": "About me\nMaintained by williamzhang7792. I contribute to the upstream gfpop package via the usual fork-and-PR flow; this repo is the standalone public record of that work.\n\n\n\nMy first GSoC meeting, May 2026: an early video call with my mentors, at the start of the time-dependent constraints project."
   },
   {
+    "objectID": "posts/rule-column/index.html",
+    "href": "posts/rule-column/index.html",
+    "title": "Adding a rule column to gfpop: backward compatible by default",
+    "section": "",
+    "text": "PR B is the second in the midterm series and the first one that touches the API. It adds a rule column to gfpop’s graph, the column that later PRs will use to switch edges on and off along the signal. On its own it does nothing yet, by design."
+  },
+  {
+    "objectID": "posts/rule-column/index.html#what-the-column-is",
+    "href": "posts/rule-column/index.html#what-the-column-is",
+    "title": "Adding a rule column to gfpop: backward compatible by default",
+    "section": "What the column is",
+    "text": "What the column is\nA gfpop graph is a data frame of edges. Each row is one allowed transition, carrying its type, penalty, and parameters. PR B gives each row one more field: rule, an integer id, defaulting to NA.\nNA means the edge is active under every rule. A graph built the old way, with no rule set, has NA on every edge and behaves exactly as it did before. The column is recorded and ignored until PR D teaches the solver to read it.\nIt is added wherever a graph is built. Edge() takes a new rule = argument, and graph(), StartEnd(), and Node() all carry the field, so the data frame has the same shape no matter how you assemble it.\n# default rule = NA: active in every rule, identical to before\nEdge(\"bkg\", \"bkg\", type = \"null\")\n\n# explicit: this edge is active only under rule 2\nEdge(\"bkg\", \"peak\", type = \"up\", penalty = 10, rule = 2)"
+  },
+  {
+    "objectID": "posts/rule-column/index.html#why-it-goes-upstream-first-as-a-draft",
+    "href": "posts/rule-column/index.html#why-it-goes-upstream-first-as-a-draft",
+    "title": "Adding a rule column to gfpop: backward compatible by default",
+    "section": "Why it goes upstream first, as a draft",
+    "text": "Why it goes upstream first, as a draft\nThe rule column is the API surface everything else is built on. Once PRs C and D depend on its shape, changing it is expensive. So it goes upstream on its own, as a draft: #21. The draft is an invitation. Before I stack three more PRs on this shape, I want Vincent’s read on whether a per-edge integer id is the right way to express a rule, while it is still cheap to change."
+  },
+  {
+    "objectID": "posts/rule-column/index.html#backward-compatibility",
+    "href": "posts/rule-column/index.html#backward-compatibility",
+    "title": "Adding a rule column to gfpop: backward compatible by default",
+    "section": "Backward compatibility",
+    "text": "Backward compatibility\nThe NA default exists so that nothing changes for existing code, and that is a claim worth a test rather than a promise. PR B adds tests/testthat/test-rule.R: twenty-two tests covering the default and explicit rule on Edge(), the validation errors for a bad value, that StartEnd() and Node() carry the same column as Edge(), that reordering a graph preserves its rule values, and a full gfpop() solve that returns the same result with the column present as without it.\nOne test paid for itself right away. I first declared the empty graph skeletons with numeric(0), a double. When graphReorder() rebuilds a graph by row-binding, a double rule column stays double, and the test that checks the reordered values came back “equal but not identical”: 1 where it wanted 1L. The fix was to declare the skeleton column as integer(0), so the rule stays a clean integer from the R side through to the integer vector the C++ will read in PR D. Small, but the test caught it before it could turn into a confusing type mismatch later."
+  },
+  {
+    "objectID": "posts/rule-column/index.html#a-small-blast-radius",
+    "href": "posts/rule-column/index.html#a-small-blast-radius",
+    "title": "Adding a rule column to gfpop: backward compatible by default",
+    "section": "A small blast radius",
+    "text": "A small blast radius\ngraphReorder() needed no new logic. It indexes its columns by position, so the rule column travels along with the rest untouched. PR B adds a field and changes no behavior, which is what makes it safe to put in front of the maintainer first."
+  },
+  {
+    "objectID": "posts/rule-column/index.html#related-prs",
+    "href": "posts/rule-column/index.html#related-prs",
+    "title": "Adding a rule column to gfpop: backward compatible by default",
+    "section": "Related PRs",
+    "text": "Related PRs\n\nPR #21, open as a draft so the rule API can be discussed before later PRs build on it."
+  },
+  {
     "objectID": "posts/adding-ci/index.html",
     "href": "posts/adding-ci/index.html",
     "title": "Adding CI to gfpop: the first neutral reader",
@@ -137,6 +179,6 @@
     "href": "index.html",
     "title": "gsoc2026-gfpop-blog",
     "section": "",
-    "text": "Posts documenting my Google Summer of Code 2026 work on gfpop. It is graph-constrained change-point detection in R. Each contribution post links the upstream pull request it describes.\n\n\n\n\n\n\n\n\n\nAdding CI to gfpop: the first neutral reader\n\n\n\ngsoc\n\ngfpop\n\ncontribution\n\nci\n\nmidterm\n\n\n\n\n\n\n\n\n\nJun 30, 2026\n\n4 min\n\n\n\n\n\n\nHow to hand a maintainer a whole feature: the midterm in five PRs\n\n\n\ngsoc\n\ngfpop\n\nmidterm\n\n\n\nThe GSoC midterm deliverable is the core of time-dependent constraints in gfpop. This is the hub post for how it was sliced into five small, independent, backward-compatible pull requests, A through E, with the trunk green the whole way.\n\n\n\n\n\nJun 29, 2026\n\n7 min\n\n\n\n\n\n\nStarting GSoC 2026: the project and how this blog works\n\n\n\ngsoc\n\ngfpop\n\nintro\n\n\n\nAn introduction to my GSoC 2026 project on time-dependent constraints in gfpop, and how this blog is organized.\n\n\n\n\n\nJun 28, 2026\n\n2 min\n\n\n\n\nNo matching items"
+    "text": "Posts documenting my Google Summer of Code 2026 work on gfpop. It is graph-constrained change-point detection in R. Each contribution post links the upstream pull request it describes.\n\n\n\n\n\n\n\n\n\nAdding CI to gfpop: the first neutral reader\n\n\n\ngsoc\n\ngfpop\n\ncontribution\n\nci\n\nmidterm\n\n\n\n\n\n\n\n\n\nJun 30, 2026\n\n4 min\n\n\n\n\n\n\nAdding a rule column to gfpop: backward compatible by default\n\n\n\ngsoc\n\ngfpop\n\ncontribution\n\nrule\n\n\n\n\n\n\n\n\n\nJun 30, 2026\n\n3 min\n\n\n\n\n\n\nHow to hand a maintainer a whole feature: the midterm in five PRs\n\n\n\ngsoc\n\ngfpop\n\nmidterm\n\n\n\nThe GSoC midterm deliverable is the core of time-dependent constraints in gfpop. This is the hub post for how it was sliced into five small, independent, backward-compatible pull requests, A through E, with the trunk green the whole way.\n\n\n\n\n\nJun 29, 2026\n\n7 min\n\n\n\n\n\n\nStarting GSoC 2026: the project and how this blog works\n\n\n\ngsoc\n\ngfpop\n\nintro\n\n\n\nAn introduction to my GSoC 2026 project on time-dependent constraints in gfpop, and how this blog is organized.\n\n\n\n\n\nJun 28, 2026\n\n2 min\n\n\n\n\nNo matching items"
   }
 ]
