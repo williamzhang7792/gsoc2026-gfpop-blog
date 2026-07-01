@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="William Zhang">
+<meta name="dcterms.date" content="2026-06-30">
 
-<title>gsoc2026-gfpop-blog</title>
+<title>Wiring the rule into gfpop’s C++ core: inert by design – gsoc2026-gfpop-blog</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -23,32 +25,65 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-158031087360bce0ff56dc785ce39e06.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-5685cd926c25366c96d9f1407e584118.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-158031087360bce0ff56dc785ce39e06.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-158031087360bce0ff56dc785ce39e06.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-5685cd926c25366c96d9f1407e584118.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-158031087360bce0ff56dc785ce39e06.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -76,67 +111,9 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
 
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-description','listing-categories','listing-reading-time',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
 <body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -304,11 +281,11 @@ window.Quarto = {
   </script>
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">gsoc2026-gfpop-blog</span>
     </a>
   </div>
@@ -319,11 +296,11 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="../../index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -340,190 +317,104 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">gsoc2026-gfpop-blog</h1>
-            <p class="subtitle lead">Contribution log &amp; tutorials for the gfpop R package</p>
-                      </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta column-page-left">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(5)</span></div><div class="category" data-category="Y2k=">ci <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Y29udHJpYnV0aW9u">contribution <span class="quarto-category-count">(3)</span></div><div class="category" data-category="Z2Zwb3A=">gfpop <span class="quarto-category-count">(5)</span></div><div class="category" data-category="Z3NvYw==">gsoc <span class="quarto-category-count">(5)</span></div><div class="category" data-category="aW50cm8=">intro <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bWlkdGVybQ==">midterm <span class="quarto-category-count">(2)</span></div><div class="category" data-category="cnVsZQ==">rule <span class="quarto-category-count">(2)</span></div></div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#what-it-adds" id="toc-what-it-adds" class="nav-link active" data-scroll-target="#what-it-adds">What it adds</a></li>
+  <li><a href="#why-it-changes-nothing" id="toc-why-it-changes-nothing" class="nav-link" data-scroll-target="#why-it-changes-nothing">Why it changes nothing</a></li>
+  <li><a href="#independent-but-stacked" id="toc-independent-but-stacked" class="nav-link" data-scroll-target="#independent-but-stacked">Independent, but stacked</a></li>
+  <li><a href="#related-prs" id="toc-related-prs" class="nav-link" data-scroll-target="#related-prs">Related PRs</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">Wiring the rule into gfpop’s C++ core: inert by design</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+  <div class="quarto-categories">
+    <div class="quarto-category">gsoc</div>
+    <div class="quarto-category">gfpop</div>
+    <div class="quarto-category">contribution</div>
+    <div class="quarto-category">rule</div>
+  </div>
+  </div>
 
 
 
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>William Zhang </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 30, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
 
 
-
-<p>Posts documenting my <a href="https://summerofcode.withgoogle.com/">Google Summer of Code 2026</a> work on <a href="https://github.com/vrunge/gfpop"><strong>gfpop</strong></a>. It is graph-constrained change-point detection in R. Each contribution post links the upstream pull request it describes.</p>
-
+</header>
 
 
+<p>PR B put a <code>rule</code> column on gfpop’s graph in R. PR C teaches the C++ core to read it, and nothing acts on it yet, by design.</p>
+<section id="what-it-adds" class="level2">
+<h2 class="anchored" data-anchor-id="what-it-adds">What it adds</h2>
+<p>Three small pieces, all dormant:</p>
+<ul>
+<li>A <code>ruleID</code> field on the C++ edge, plus a <code>getRuleID()</code> accessor. The constructor defaults it to a sentinel, <code>UINT_MAX</code>, meaning “active in every rule.”</li>
+<li>A <code>Graph::isActive()</code> helper that answers whether an edge is on for a given rule:</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> Graph<span class="op">::</span>isActive<span class="op">(</span><span class="dt">unsigned</span> <span class="dt">int</span> edgeIndex<span class="op">,</span> <span class="dt">unsigned</span> <span class="dt">int</span> rule<span class="op">)</span> <span class="at">const</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">unsigned</span> <span class="dt">int</span> rid <span class="op">=</span> edges<span class="op">[</span>edgeIndex<span class="op">].</span>getRuleID<span class="op">();</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">(</span>rid <span class="op">==</span> UINT_MAX<span class="op">)</span> <span class="op">||</span> <span class="op">(</span>rid <span class="op">==</span> rule<span class="op">);</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li>A defensive read of the rule column in <code>main.cpp</code>, mapping <code>NA</code> to the sentinel:</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasRule <span class="op">=</span> mygraph<span class="op">.</span>containsElementNamed<span class="op">(</span><span class="st">"rule"</span><span class="op">);</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>Rcpp<span class="op">::</span>IntegerVector ruleCol<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span><span class="op">(</span>hasRule<span class="op">){</span>ruleCol <span class="op">=</span> mygraph<span class="op">[</span><span class="st">"rule"</span><span class="op">];}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="why-it-changes-nothing" class="level2">
+<h2 class="anchored" data-anchor-id="why-it-changes-nothing">Why it changes nothing</h2>
+<p><code>isActive()</code> is defined and never called. The solver still walks every edge exactly as before, so the output is bit-for-bit what it was. The test that proves it builds a graph carrying rule ids, runs <code>gfpop()</code>, and checks the result against the same graph with no rules. They match.</p>
+<p>Splitting the plumbing from the activation is deliberate. A reviewer can confirm the new field and helper are genuinely dormant before they look at the switch that turns them on in PR D. Each PR asks them to trust one thing, not three.</p>
+</section>
+<section id="independent-but-stacked" class="level2">
+<h2 class="anchored" data-anchor-id="independent-but-stacked">Independent, but stacked</h2>
+<p>The column read is defensive: <code>containsElementNamed("rule")</code> means a graph with no rule column still works, with every edge getting the sentinel. So PR C compiles and behaves identically whether or not PR B is present. In practice it sits on top of B, because the inert-equality test uses B’s <code>Edge(rule = ...)</code> to build its test graph rather than reaching around it.</p>
+<p>The signature of <code>gfpopTransfer</code> did not change: PR C only reads an extra named column off the data frame already passed in, so there is no <code>RcppExports</code> to regenerate. The whole change compiles clean under <code>-Wall -pedantic</code>.</p>
+</section>
+<section id="related-prs" class="level2">
+<h2 class="anchored" data-anchor-id="related-prs">Related PRs</h2>
+<ul>
+<li>Staged on the <a href="https://github.com/williamzhang7792/gfpop/tree/prototype/time-dependent-constraints">prototype branch</a>; the upstream PR follows once A and B land and the rule API is settled.</li>
+</ul>
 
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="Z3NvYyUyQ2dmcG9wJTJDY29udHJpYnV0aW9uJTJDY2klMkNtaWR0ZXJt" data-listing-date-sort="1782774000000" data-listing-file-modified-sort="1782842895725" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="784">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/adding-ci/index.html" class="no-external">Adding CI to gfpop: the first neutral reader</a>
-</h3>
-<div class="listing-categories">
 
-<div class="listing-category" onclick="window.quartoListingCategory('Z3NvYw=='); return false;">gsoc</div>
+<!-- -->
 
-<div class="listing-category" onclick="window.quartoListingCategory('Z2Zwb3A='); return false;">gfpop</div>
+</section>
 
-<div class="listing-category" onclick="window.quartoListingCategory('Y29udHJpYnV0aW9u'); return false;">contribution</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('Y2k='); return false;">ci</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('bWlkdGVybQ=='); return false;">midterm</div>
-
-</div>
-<div class="delink listing-description"><a href="./posts/adding-ci/index.html" class="no-external">
-The midterm work on gfpop is five small pull requests, A through E, mostly independent, building toward a LOPART oracle at the end. PR A was supposed to be the “dull” one…
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/adding-ci/index.html" class="no-external">
-<div class="listing-date">
-Jun 30, 2026
-</div>
-<div class="listing-reading-time">4 min</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="Z3NvYyUyQ2dmcG9wJTJDY29udHJpYnV0aW9uJTJDcnVsZQ==" data-listing-date-sort="1782774000000" data-listing-file-modified-sort="1782948478058" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="529">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/rule-column/index.html" class="no-external">Adding a rule column to gfpop: backward compatible by default</a>
-</h3>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z3NvYw=='); return false;">gsoc</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z2Zwb3A='); return false;">gfpop</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('Y29udHJpYnV0aW9u'); return false;">contribution</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('cnVsZQ=='); return false;">rule</div>
-
-</div>
-<div class="delink listing-description"><a href="./posts/rule-column/index.html" class="no-external">
-PR B is the second in the midterm series and the first one that touches the API. It adds a <code>rule</code> column to gfpop’s graph, the column that later PRs will use to switch edges…
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/rule-column/index.html" class="no-external">
-<div class="listing-date">
-Jun 30, 2026
-</div>
-<div class="listing-reading-time">3 min</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-categories="Z3NvYyUyQ2dmcG9wJTJDY29udHJpYnV0aW9uJTJDcnVsZQ==" data-listing-date-sort="1782774000000" data-listing-file-modified-sort="1782949787020" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="328">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/cpp-rule-plumbing/index.html" class="no-external">Wiring the rule into gfpop’s C++ core: inert by design</a>
-</h3>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z3NvYw=='); return false;">gsoc</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z2Zwb3A='); return false;">gfpop</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('Y29udHJpYnV0aW9u'); return false;">contribution</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('cnVsZQ=='); return false;">rule</div>
-
-</div>
-<div class="delink listing-description"><a href="./posts/cpp-rule-plumbing/index.html" class="no-external">
-PR B put a <code>rule</code> column on gfpop’s graph in R. PR C teaches the C++ core to read it, and nothing acts on it yet, by design.
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/cpp-rule-plumbing/index.html" class="no-external">
-<div class="listing-date">
-Jun 30, 2026
-</div>
-<div class="listing-reading-time">2 min</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-categories="Z3NvYyUyQ2dmcG9wJTJDbWlkdGVybQ==" data-listing-date-sort="1782687600000" data-listing-file-modified-sort="1782840862452" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1313">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/midterm-in-five-prs/index.html" class="no-external">How to hand a maintainer a whole feature: the midterm in five PRs</a>
-</h3>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z3NvYw=='); return false;">gsoc</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z2Zwb3A='); return false;">gfpop</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('bWlkdGVybQ=='); return false;">midterm</div>
-
-</div>
-<div class="delink listing-description"><a href="./posts/midterm-in-five-prs/index.html" class="no-external">
-<p>The GSoC midterm deliverable is the core of time-dependent constraints in gfpop. This is the hub post for how it was sliced into five small, independent, backward-compatible pull requests, A through E, with the trunk green the whole way.</p>
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/midterm-in-five-prs/index.html" class="no-external">
-<div class="listing-date">
-Jun 29, 2026
-</div>
-<div class="listing-reading-time">7 min</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="4" data-categories="Z3NvYyUyQ2dmcG9wJTJDaW50cm8=" data-listing-date-sort="1782601200000" data-listing-file-modified-sort="1782841603908" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="391">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/week-1-setup/index.html" class="no-external">Starting GSoC 2026: the project and how this blog works</a>
-</h3>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z3NvYw=='); return false;">gsoc</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('Z2Zwb3A='); return false;">gfpop</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('aW50cm8='); return false;">intro</div>
-
-</div>
-<div class="delink listing-description"><a href="./posts/week-1-setup/index.html" class="no-external">
-<p>An introduction to my GSoC 2026 project on time-dependent constraints in gfpop, and how this blog is organized.</p>
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/week-1-setup/index.html" class="no-external">
-<div class="listing-date">
-Jun 28, 2026
-</div>
-<div class="listing-reading-time">2 min</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
@@ -607,6 +498,57 @@ Jun 28, 2026
         container: window.document.getElementById('quarto-embedded-source-code-modal')
       });
       clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
@@ -936,7 +878,55 @@ Jun 28, 2026
       }
     }
   });
-  </script>
+  </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Wiring the rule into gfpop's C++ core: inert by design"</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> "William Zhang"</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "2026-06-30"</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="an">categories:</span><span class="co"> [gsoc, gfpop, contribution, rule]</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>PR B put a <span class="in">`rule`</span> column on gfpop's graph in R. PR C teaches the C++ core to read it, and nothing acts on it yet, by design.</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">## What it adds</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>Three small pieces, all dormant:</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A <span class="in">`ruleID`</span> field on the C++ edge, plus a <span class="in">`getRuleID()`</span> accessor. The constructor defaults it to a sentinel, <span class="in">`UINT_MAX`</span>, meaning "active in every rule."</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A <span class="in">`Graph::isActive()`</span> helper that answers whether an edge is on for a given rule:</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="in">```cpp</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> Graph<span class="op">::</span>isActive<span class="op">(</span><span class="dt">unsigned</span> <span class="dt">int</span> edgeIndex<span class="op">,</span> <span class="dt">unsigned</span> <span class="dt">int</span> rule<span class="op">)</span> <span class="at">const</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">unsigned</span> <span class="dt">int</span> rid <span class="op">=</span> edges<span class="op">[</span>edgeIndex<span class="op">].</span>getRuleID<span class="op">();</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">(</span>rid <span class="op">==</span> UINT_MAX<span class="op">)</span> <span class="op">||</span> <span class="op">(</span>rid <span class="op">==</span> rule<span class="op">);</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A defensive read of the rule column in <span class="in">`main.cpp`</span>, mapping <span class="in">`NA`</span> to the sentinel:</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="in">```cpp</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasRule <span class="op">=</span> mygraph<span class="op">.</span>containsElementNamed<span class="op">(</span><span class="st">"rule"</span><span class="op">);</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>Rcpp<span class="op">::</span>IntegerVector ruleCol<span class="op">;</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span><span class="op">(</span>hasRule<span class="op">){</span>ruleCol <span class="op">=</span> mygraph<span class="op">[</span><span class="st">"rule"</span><span class="op">];}</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="fu">## Why it changes nothing</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="in">`isActive()`</span> is defined and never called. The solver still walks every edge exactly as before, so the output is bit-for-bit what it was. The test that proves it builds a graph carrying rule ids, runs <span class="in">`gfpop()`</span>, and checks the result against the same graph with no rules. They match.</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>Splitting the plumbing from the activation is deliberate. A reviewer can confirm the new field and helper are genuinely dormant before they look at the switch that turns them on in PR D. Each PR asks them to trust one thing, not three.</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="fu">## Independent, but stacked</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>The column read is defensive: <span class="in">`containsElementNamed("rule")`</span> means a graph with no rule column still works, with every edge getting the sentinel. So PR C compiles and behaves identically whether or not PR B is present. In practice it sits on top of B, because the inert-equality test uses B's <span class="in">`Edge(rule = ...)`</span> to build its test graph rather than reaching around it.</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>The signature of <span class="in">`gfpopTransfer`</span> did not change: PR C only reads an extra named column off the data frame already passed in, so there is no <span class="in">`RcppExports`</span> to regenerate. The whole change compiles clean under <span class="in">`-Wall -pedantic`</span>.</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="fu">## Related PRs</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Staged on the <span class="co">[</span><span class="ot">prototype branch</span><span class="co">](https://github.com/williamzhang7792/gfpop/tree/prototype/time-dependent-constraints)</span>; the upstream PR follows once A and B land and the rule API is settled.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
 </div> <!-- /content -->
 
 

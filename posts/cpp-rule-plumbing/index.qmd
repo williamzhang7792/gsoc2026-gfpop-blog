@@ -1,0 +1,47 @@
+---
+title: "Wiring the rule into gfpop's C++ core: inert by design"
+author: "William Zhang"
+date: "2026-06-30"
+categories: [gsoc, gfpop, contribution, rule]
+---
+
+PR B put a `rule` column on gfpop's graph in R. PR C teaches the C++ core to read it, and nothing acts on it yet, by design.
+
+## What it adds
+
+Three small pieces, all dormant:
+
+- A `ruleID` field on the C++ edge, plus a `getRuleID()` accessor. The constructor defaults it to a sentinel, `UINT_MAX`, meaning "active in every rule."
+- A `Graph::isActive()` helper that answers whether an edge is on for a given rule:
+
+```cpp
+bool Graph::isActive(unsigned int edgeIndex, unsigned int rule) const
+{
+  unsigned int rid = edges[edgeIndex].getRuleID();
+  return (rid == UINT_MAX) || (rid == rule);
+}
+```
+
+- A defensive read of the rule column in `main.cpp`, mapping `NA` to the sentinel:
+
+```cpp
+bool hasRule = mygraph.containsElementNamed("rule");
+Rcpp::IntegerVector ruleCol;
+if(hasRule){ruleCol = mygraph["rule"];}
+```
+
+## Why it changes nothing
+
+`isActive()` is defined and never called. The solver still walks every edge exactly as before, so the output is bit-for-bit what it was. The test that proves it builds a graph carrying rule ids, runs `gfpop()`, and checks the result against the same graph with no rules. They match.
+
+Splitting the plumbing from the activation is deliberate. A reviewer can confirm the new field and helper are genuinely dormant before they look at the switch that turns them on in PR D. Each PR asks them to trust one thing, not three.
+
+## Independent, but stacked
+
+The column read is defensive: `containsElementNamed("rule")` means a graph with no rule column still works, with every edge getting the sentinel. So PR C compiles and behaves identically whether or not PR B is present. In practice it sits on top of B, because the inert-equality test uses B's `Edge(rule = ...)` to build its test graph rather than reaching around it.
+
+The signature of `gfpopTransfer` did not change: PR C only reads an extra named column off the data frame already passed in, so there is no `RcppExports` to regenerate. The whole change compiles clean under `-Wall -pedantic`.
+
+## Related PRs
+
+- Staged on the [prototype branch](https://github.com/williamzhang7792/gfpop/tree/prototype/time-dependent-constraints); the upstream PR follows once A and B land and the rule API is settled.

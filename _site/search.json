@@ -21,6 +21,41 @@
     "text": "About me\nMaintained by williamzhang7792. I contribute to the upstream gfpop package via the usual fork-and-PR flow; this repo is the standalone public record of that work.\n\n\n\nMy first GSoC meeting, May 2026: an early video call with my mentors, at the start of the time-dependent constraints project."
   },
   {
+    "objectID": "posts/cpp-rule-plumbing/index.html",
+    "href": "posts/cpp-rule-plumbing/index.html",
+    "title": "Wiring the rule into gfpop’s C++ core: inert by design",
+    "section": "",
+    "text": "PR B put a rule column on gfpop’s graph in R. PR C teaches the C++ core to read it, and nothing acts on it yet, by design."
+  },
+  {
+    "objectID": "posts/cpp-rule-plumbing/index.html#what-it-adds",
+    "href": "posts/cpp-rule-plumbing/index.html#what-it-adds",
+    "title": "Wiring the rule into gfpop’s C++ core: inert by design",
+    "section": "What it adds",
+    "text": "What it adds\nThree small pieces, all dormant:\n\nA ruleID field on the C++ edge, plus a getRuleID() accessor. The constructor defaults it to a sentinel, UINT_MAX, meaning “active in every rule.”\nA Graph::isActive() helper that answers whether an edge is on for a given rule:\n\nbool Graph::isActive(unsigned int edgeIndex, unsigned int rule) const\n{\n  unsigned int rid = edges[edgeIndex].getRuleID();\n  return (rid == UINT_MAX) || (rid == rule);\n}\n\nA defensive read of the rule column in main.cpp, mapping NA to the sentinel:\n\nbool hasRule = mygraph.containsElementNamed(\"rule\");\nRcpp::IntegerVector ruleCol;\nif(hasRule){ruleCol = mygraph[\"rule\"];}"
+  },
+  {
+    "objectID": "posts/cpp-rule-plumbing/index.html#why-it-changes-nothing",
+    "href": "posts/cpp-rule-plumbing/index.html#why-it-changes-nothing",
+    "title": "Wiring the rule into gfpop’s C++ core: inert by design",
+    "section": "Why it changes nothing",
+    "text": "Why it changes nothing\nisActive() is defined and never called. The solver still walks every edge exactly as before, so the output is bit-for-bit what it was. The test that proves it builds a graph carrying rule ids, runs gfpop(), and checks the result against the same graph with no rules. They match.\nSplitting the plumbing from the activation is deliberate. A reviewer can confirm the new field and helper are genuinely dormant before they look at the switch that turns them on in PR D. Each PR asks them to trust one thing, not three."
+  },
+  {
+    "objectID": "posts/cpp-rule-plumbing/index.html#independent-but-stacked",
+    "href": "posts/cpp-rule-plumbing/index.html#independent-but-stacked",
+    "title": "Wiring the rule into gfpop’s C++ core: inert by design",
+    "section": "Independent, but stacked",
+    "text": "Independent, but stacked\nThe column read is defensive: containsElementNamed(\"rule\") means a graph with no rule column still works, with every edge getting the sentinel. So PR C compiles and behaves identically whether or not PR B is present. In practice it sits on top of B, because the inert-equality test uses B’s Edge(rule = ...) to build its test graph rather than reaching around it.\nThe signature of gfpopTransfer did not change: PR C only reads an extra named column off the data frame already passed in, so there is no RcppExports to regenerate. The whole change compiles clean under -Wall -pedantic."
+  },
+  {
+    "objectID": "posts/cpp-rule-plumbing/index.html#related-prs",
+    "href": "posts/cpp-rule-plumbing/index.html#related-prs",
+    "title": "Wiring the rule into gfpop’s C++ core: inert by design",
+    "section": "Related PRs",
+    "text": "Related PRs\n\nStaged on the prototype branch; the upstream PR follows once A and B land and the rule API is settled."
+  },
+  {
     "objectID": "posts/rule-column/index.html",
     "href": "posts/rule-column/index.html",
     "title": "Adding a rule column to gfpop: backward compatible by default",
@@ -179,6 +214,6 @@
     "href": "index.html",
     "title": "gsoc2026-gfpop-blog",
     "section": "",
-    "text": "Posts documenting my Google Summer of Code 2026 work on gfpop. It is graph-constrained change-point detection in R. Each contribution post links the upstream pull request it describes.\n\n\n\n\n\n\n\n\n\nAdding CI to gfpop: the first neutral reader\n\n\n\ngsoc\n\ngfpop\n\ncontribution\n\nci\n\nmidterm\n\n\n\n\n\n\n\n\n\nJun 30, 2026\n\n4 min\n\n\n\n\n\n\nAdding a rule column to gfpop: backward compatible by default\n\n\n\ngsoc\n\ngfpop\n\ncontribution\n\nrule\n\n\n\n\n\n\n\n\n\nJun 30, 2026\n\n3 min\n\n\n\n\n\n\nHow to hand a maintainer a whole feature: the midterm in five PRs\n\n\n\ngsoc\n\ngfpop\n\nmidterm\n\n\n\nThe GSoC midterm deliverable is the core of time-dependent constraints in gfpop. This is the hub post for how it was sliced into five small, independent, backward-compatible pull requests, A through E, with the trunk green the whole way.\n\n\n\n\n\nJun 29, 2026\n\n7 min\n\n\n\n\n\n\nStarting GSoC 2026: the project and how this blog works\n\n\n\ngsoc\n\ngfpop\n\nintro\n\n\n\nAn introduction to my GSoC 2026 project on time-dependent constraints in gfpop, and how this blog is organized.\n\n\n\n\n\nJun 28, 2026\n\n2 min\n\n\n\n\nNo matching items"
+    "text": "Posts documenting my Google Summer of Code 2026 work on gfpop. It is graph-constrained change-point detection in R. Each contribution post links the upstream pull request it describes.\n\n\n\n\n\n\n\n\n\nAdding CI to gfpop: the first neutral reader\n\n\n\ngsoc\n\ngfpop\n\ncontribution\n\nci\n\nmidterm\n\n\n\n\n\n\n\n\n\nJun 30, 2026\n\n4 min\n\n\n\n\n\n\nAdding a rule column to gfpop: backward compatible by default\n\n\n\ngsoc\n\ngfpop\n\ncontribution\n\nrule\n\n\n\n\n\n\n\n\n\nJun 30, 2026\n\n3 min\n\n\n\n\n\n\nWiring the rule into gfpop’s C++ core: inert by design\n\n\n\ngsoc\n\ngfpop\n\ncontribution\n\nrule\n\n\n\n\n\n\n\n\n\nJun 30, 2026\n\n2 min\n\n\n\n\n\n\nHow to hand a maintainer a whole feature: the midterm in five PRs\n\n\n\ngsoc\n\ngfpop\n\nmidterm\n\n\n\nThe GSoC midterm deliverable is the core of time-dependent constraints in gfpop. This is the hub post for how it was sliced into five small, independent, backward-compatible pull requests, A through E, with the trunk green the whole way.\n\n\n\n\n\nJun 29, 2026\n\n7 min\n\n\n\n\n\n\nStarting GSoC 2026: the project and how this blog works\n\n\n\ngsoc\n\ngfpop\n\nintro\n\n\n\nAn introduction to my GSoC 2026 project on time-dependent constraints in gfpop, and how this blog is organized.\n\n\n\n\n\nJun 28, 2026\n\n2 min\n\n\n\n\nNo matching items"
   }
 ]
